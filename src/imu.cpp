@@ -1,14 +1,17 @@
 #include <Wire.h>
 
-void setup_wire_protocol() {}
-// #include "driver/i2c_master.h"
-// #include "driver/i2c_types.h"
-// #include "esp_err.h"
-// #include "esp_log.h"
-// #include "soc/clk_tree_defs.h"
-// #include "soc/gpio_num.h"
+#include <cstdint>
 
-// static const char* IMU_TAG = "IMU";
+#include "USBCDC.h"
+#include "pins_arduino.h"
+
+#define MPU_ADDR 0x68
+#define READ_BUF_SIZE 14
+
+void configure_i2c_wire_interface() {
+  Wire.setPins(A4, A5);
+  Wire.begin();
+}
 
 // /* Persisted so imu_read_accel_data() can reuse it. Revisit the API shape
 //  * (avoid the file-scope global) tomorrow. */
@@ -33,6 +36,19 @@ void setup_wire_protocol() {}
 //     ESP_LOGW(IMU_TAG, "No I2C devices found on the bus");
 //   }
 // }
+//
+
+void scan_i2c_bus(void) {
+  Serial.printf("Scanning I2C bus...");
+  for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
+    // TODO: Finish implementing scan
+    if (addr == MPU_ADDR) {
+      Serial.printf("Found I2C device\n");
+      return;
+    }
+  }
+  Serial.printf("No I2C devices found on the bus\n");
+}
 
 // /*
 //  * Sets up the IMU to be read by creating a new master bus,
@@ -89,12 +105,73 @@ void setup_wire_protocol() {}
 //   ESP_ERROR_CHECK(wake_err);
 // }
 
-// /*
-//  * Converts the temperature to Celsius
-//  */
-// static float convert_temp(int16_t temp_raw) {
-//   return temp_raw / 340.0f + 36.53f;
-// }
+/*
+ * Converts the temperature to Celsius
+ */
+static float convert_temp(int16_t temp_raw) {
+  return temp_raw / 340.0f + 36.53f;
+}
+
+void setup_imu() {
+  // Register wake up by clearning PWR_MGMT_1
+  static uint8_t wake_buffer[] = {0x6B, 0x00};
+
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(wake_buffer[0]);
+  Wire.write(wake_buffer[1]);
+
+  Wire.endTransmission(true);
+
+  // ACCEL config
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x1C);
+  Wire.write(0x00);  // set to default range.
+  Wire.endTransmission(true);
+
+  // Configure gyroscope range to ±250 °/s
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(0x1B);  // GYRO_CONFIG register
+  Wire.write(0x00);  // ±250dps
+  Wire.endTransmission(true);
+
+  Serial.println("MPU6050 initialized");
+}
+
+void read_imu_accel_data(void) {
+  int16_t accel_x, accel_y, accel_z, temp_raw, gyro_x, gyro_y, gyro_z;
+  static uint8_t reg_addr = 0x3B; /* ACCEL_XOUT_H */
+
+  uint8_t read_buffer[READ_BUF_SIZE];
+
+  Wire.beginTransmission(MPU_ADDR);
+  Wire.write(reg_addr);
+  Wire.endTransmission(false);
+
+  size_t response = Wire.requestFrom(MPU_ADDR, READ_BUF_SIZE, true);
+  Serial.printf("Bytes written: %d\n", response);
+
+  // Wire.readBytes(read_buffer, READ_BUF_SIZE);
+
+  // accel_x = (read_buffer[0] << 8) | read_buffer[1];
+  // accel_y = (read_buffer[2] << 8) | read_buffer[3];
+  // accel_z = (read_buffer[4] << 8) | read_buffer[5];
+  // temp_raw = (read_buffer[6] << 8) | read_buffer[7];
+  // gyro_x = (read_buffer[8] << 8) | read_buffer[9];
+  // gyro_y = (read_buffer[10] << 8) | read_buffer[11];
+  // gyro_z = (read_buffer[12] << 8) | read_buffer[13];
+
+  accel_x = (Wire.read() << 8) | Wire.read();
+  accel_y = (Wire.read() << 8) | Wire.read();
+  accel_z = (Wire.read() << 8) | Wire.read();
+  temp_raw = (Wire.read() << 8) | Wire.read();
+  gyro_x = (Wire.read() << 8) | Wire.read();
+  gyro_y = (Wire.read() << 8) | Wire.read();
+  gyro_z = (Wire.read() << 8) | Wire.read();
+  float temp_c = convert_temp(temp_raw);
+
+  Serial.printf("accel[%d %d %d] gyro[%d %d %d] temp=%.2fC\n", accel_x, accel_y,
+                accel_z, gyro_x, gyro_y, gyro_z, temp_c);
+}
 
 // /*
 //  * Reads accel/gyro/temp data from the imu

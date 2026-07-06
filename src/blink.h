@@ -4,4 +4,4 @@
 void configure_led();
 
 // Blink
-void blink_da_led();
+void blink_led();

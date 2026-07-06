@@ -5,7 +5,7 @@
 #include "io_pin_remap.h"
 #include "pins_arduino.h"
 
-void blink_da_led(void) {
+void blink_led(void) {
   digitalWrite(LED_BUILTIN, HIGH);
   delay(200 / portTICK_PERIOD_MS);
 
