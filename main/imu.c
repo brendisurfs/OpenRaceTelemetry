@@ -102,10 +102,11 @@ static void imu_read_accel_data(void) {
 
   esp_err_t err = i2c_master_transmit_receive(
       s_imu_dev_handle, &reg_addr, 1, read_buffer, sizeof(read_buffer), 500);
+
   ESP_ERROR_CHECK(err);
 
   // This is just a fancy way of combining the bits sent over I2C.
-  // Shift the high byte left by 8 bits, append the low byte.
+  // Shift the high bit left by 8 bits, append the low bit to create bytes.
   int16_t accel_x = (read_buffer[0] << 8) | read_buffer[1];
   int16_t accel_y = (read_buffer[2] << 8) | read_buffer[3];
   int16_t accel_z = (read_buffer[4] << 8) | read_buffer[5];
