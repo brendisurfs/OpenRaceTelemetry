@@ -4,6 +4,10 @@ An open-source telemetry system for motorcycle racers,
 enabling people to build their own telemetry systems
 for a fraction of the price of commercil systems.
 
+### Status
+
+🚧 In Progress — this project is under active development and not yet ready for use.
+
 ### Overview
 
 Telemetry in racing is incredibly important for a variety of reasons within racing.
@@ -27,8 +31,28 @@ The software includes components for the ESP32, IMU, and other components added 
 
 ### Running
 
-You will need PlatformIO's cli tool to run this.
-[TODO]
+#### Requirements
+
+- [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (the `pio` CLI)
+- An Arduino Nano ESP32 (or update `platformio.ini` to match your board)
+- A USB cable to connect the board to your computer
+
+#### Uploading
+
+1. Connect the board to your computer via USB.
+2. Put the board into bootloader mode. On the Arduino Nano ESP32, double-press the reset button — the onboard LED will pulse, indicating it's ready to receive firmware.
+3. Update `upload_port` in `platformio.ini` to match the port your board enumerates as (find it with `pio device list`).
+4. Upload the firmware:
+
+   ```bash
+   pio run -t upload
+   ```
+
+5. Optionally, monitor serial output:
+
+   ```bash
+   pio device monitor
+   ```
 
 ### Contributing
 
