@@ -64,3 +64,6 @@ sdkconfig.old
 
 # Editor
 .zed/
+checklist.md
+compile_commands.json
+.pio/
