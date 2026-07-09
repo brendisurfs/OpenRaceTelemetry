@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include "imu_math.h"
 #include "pins_arduino.h"
 
 #define MPU_ADDR 0x68
@@ -42,13 +43,6 @@ void scan_i2c_bus(void) {
   if (found == 0) {
     Serial.printf("No I2C devices found on the bus\n");
   }
-}
-
-/*
- * Converts the temperature to Celsius
- */
-static float convert_temp(int16_t temp_raw) {
-  return temp_raw / 340.0f + 36.53f;
 }
 
 void wake_mpu() {
@@ -102,17 +96,18 @@ void read_imu_accel_data(void) {
   // gyro_y = (read_buffer[10] << 8) | read_buffer[11];
   // gyro_z = (read_buffer[12] << 8) | read_buffer[13];
 
-  accel_x = (Wire.read() << 8) | Wire.read();
-  accel_y = (Wire.read() << 8) | Wire.read();
-  accel_z = (Wire.read() << 8) | Wire.read();
-  temp_raw = (Wire.read() << 8) | Wire.read();
-  gyro_x = (Wire.read() << 8) | Wire.read();
-  gyro_y = (Wire.read() << 8) | Wire.read();
-  gyro_z = (Wire.read() << 8) | Wire.read();
-  float temp_c = convert_temp(temp_raw);
+  accel_x = combine_bytes(Wire.read(), Wire.read());
+  accel_y = combine_bytes(Wire.read(), Wire.read());
+  accel_z = combine_bytes(Wire.read(), Wire.read());
+  temp_raw = combine_bytes(Wire.read(), Wire.read());
+  gyro_x = combine_bytes(Wire.read(), Wire.read());
+  gyro_y = combine_bytes(Wire.read(), Wire.read());
+  gyro_z = combine_bytes(Wire.read(), Wire.read());
+
+  float temp_celsius = convert_temp(temp_raw);
 
   Serial.printf("accel: [%d %d %d] gyro: [%d %d %d] temp: %.2fC\n", accel_x,
-                accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_c);
+                accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_celsius);
 }
 
 // /*
