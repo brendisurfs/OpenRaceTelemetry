@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <sys/unistd.h>
 
 #include "Wire.h"
 #include "blink.h"
