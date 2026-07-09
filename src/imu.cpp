@@ -106,8 +106,10 @@ void read_imu_accel_data(void) {
 
   float temp_celsius = convert_temp(temp_raw);
 
-  Serial.printf("accel: [%d %d %d] gyro: [%d %d %d] temp: %.2fC\n", accel_x,
-                accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_celsius);
+  Serial.printf(
+      "accel: [%d %d %d] gyro: [%d %d %d] temp_raw: %d temp_c: %.2fC\n",
+      accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_raw,
+      temp_celsius);
 }
 
 // /*
