@@ -1,11 +1,16 @@
 build:
-  idf.py build
+    idf.py build
 
 upload:
-  pio run -t upload
+    pio run -t upload
 
 upload-and-monitor:
     pio run -t upload -t monitor
 
-test-native: 
-  pio test -e native
+# Builds and links to the hardware.
+test-esp32:
+    pio test -e esp32dev
+
+# Tests native utility functions
+test-native:
+    pio test -e native
