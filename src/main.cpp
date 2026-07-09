@@ -1,16 +1,24 @@
 #include <Arduino.h>
+#include <sys/unistd.h>
 
-#include "USBCDC.h"
+#include "Wire.h"
 #include "blink.h"
+#include "esp32-hal-gpio.h"
+#include "esp32-hal.h"
 #include "imu.h"
 
 void setup() {
-  Serial.begin(115200);
+  Wire.begin();
+  Serial.begin(9600);
+
+  Serial.println("Starting up config sequence");
   configure_led();
-  configure_i2c_wire_interface();
+  setup_imu();
 }
 
 void loop() {
-  blink_led();
+  digitalWrite(LED_BUILTIN, LOW);
   read_imu_accel_data();
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(100);
 }

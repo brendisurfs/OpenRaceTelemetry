@@ -1,109 +1,48 @@
+#include <Arduino.h>
 #include <Wire.h>
 
-#include <cstdint>
-
-#include "USBCDC.h"
 #include "pins_arduino.h"
 
 #define MPU_ADDR 0x68
+#define PWR_MGMT_REG 0x6B
+#define ACCEL_CONFIG 0x1C
+#define GYRO_CONFIG 0x1B
+#define ACCEL_OUT_H 0x3B
+
 #define READ_BUF_SIZE 14
 
 void configure_i2c_wire_interface() {
   Wire.setPins(A4, A5);
   Wire.begin();
+
+  // No external pull-up resistors on SDA/SCL — fall back to the ESP32's
+  // weak internal pull-ups so the bus doesn't float.
+  pinMode(A4, INPUT_PULLUP);
+  pinMode(A5, INPUT_PULLUP);
 }
 
-// /* Persisted so imu_read_accel_data() can reuse it. Revisit the API shape
-//  * (avoid the file-scope global) tomorrow. */
-// static i2c_master_dev_handle_t s_imu_dev_handle;
-
-// /*
-//  * Probes every 7-bit I2C address (0x08-0x77) on bus_handle and logs which
-//  * ones ACK. Use this to sanity-check wiring before trusting a fixed
-//  * device address like 0x68/0x69.
-//  */
-// static void imu_i2c_scan(i2c_master_bus_handle_t bus_handle) {
-//   ESP_LOGI(IMU_TAG, "Scanning I2C bus...");
-//   int found = 0;
-//   for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
-//     esp_err_t err = i2c_master_probe(bus_handle, addr, 50);
-//     if (err == ESP_OK) {
-//       ESP_LOGI(IMU_TAG, "Found device at 0x%02X", addr);
-//       found++;
-//     }
-//   }
-//   if (found == 0) {
-//     ESP_LOGW(IMU_TAG, "No I2C devices found on the bus");
-//   }
-// }
-//
-
+/*
+ * Probes every 7-bit I2C address (0x08-0x77) on bus_handle and logs which
+ * ones ACK. Use this to sanity-check wiring before trusting a fixed
+ * device address like 0x68/0x69.
+ */
 void scan_i2c_bus(void) {
-  Serial.printf("Scanning I2C bus...");
+  Serial.printf("Scanning I2C bus (SDA=%d, SCL=%d)...\n", A4, A5);
+
+  int found = 0;
   for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
-    // TODO: Finish implementing scan
-    if (addr == MPU_ADDR) {
-      Serial.printf("Found I2C device\n");
-      return;
+    Wire.beginTransmission(addr);
+    uint8_t err = Wire.endTransmission();
+    if (err == 0) {
+      Serial.printf("Found I2C device at 0x%02X\n", addr);
+      found++;
     }
   }
-  Serial.printf("No I2C devices found on the bus\n");
+
+  if (found == 0) {
+    Serial.printf("No I2C devices found on the bus\n");
+  }
 }
-
-// /*
-//  * Sets up the IMU to be read by creating a new master bus,
-//  * scanning to make sure our device is properly wired,
-//  * waking it up
-//  */
-// static void setup_imu(void) {
-//   i2c_master_bus_config_t config = {.i2c_port = -1,
-//                                     .sda_io_num = GPIO_NUM_11,
-//                                     .scl_io_num = GPIO_NUM_12,
-//                                     .clk_source = I2C_CLK_SRC_DEFAULT,
-//                                     .glitch_ignore_cnt = 7,
-//                                     .intr_priority = 0,
-//                                     .trans_queue_depth = 0,
-//                                     .flags.enable_internal_pullup = true};
-
-//   i2c_master_bus_handle_t bus_handle;
-
-//   esp_err_t err_code = i2c_new_master_bus(&config, &bus_handle);
-//   if (err_code) {
-//     ESP_LOGE(IMU_TAG, "Error setting master bus: %s\n",
-//              esp_err_to_name(err_code));
-//     return;
-//   }
-
-//   imu_i2c_scan(bus_handle);
-
-//   /*Add the IMU device to the master bus handle */
-//   i2c_device_config_t dev_config = {
-//       .device_address = 0x68,
-//       .scl_speed_hz = 400000,
-//   };
-
-//   esp_err_t add_device_err =
-//       i2c_master_bus_add_device(bus_handle, &dev_config, &s_imu_dev_handle);
-
-//   if (add_device_err) {
-//     ESP_LOGE(IMU_TAG, "Error adding device: %s\n",
-//              esp_err_to_name(add_device_err));
-//     return;
-//   }
-
-//   /*
-//    * MPU6050 boots into sleep mode; wake it by clearing PWR_MGMT_1
-//    */
-//   uint8_t wake_buffer[] = {0x6B, 0x00};
-//   esp_err_t wake_err = i2c_master_transmit(s_imu_dev_handle, wake_buffer,
-//                                            sizeof(wake_buffer), 500);
-
-//   if (wake_err) {
-//     ESP_LOGE(IMU_TAG, "Wake error: %s\n", esp_err_to_name(wake_err));
-//   }
-
-//   ESP_ERROR_CHECK(wake_err);
-// }
 
 /*
  * Converts the temperature to Celsius
@@ -112,43 +51,46 @@ static float convert_temp(int16_t temp_raw) {
   return temp_raw / 340.0f + 36.53f;
 }
 
-void setup_imu() {
-  // Register wake up by clearning PWR_MGMT_1
-  static uint8_t wake_buffer[] = {0x6B, 0x00};
-
+void wake_mpu() {
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(wake_buffer[0]);
-  Wire.write(wake_buffer[1]);
-
+  Wire.write(PWR_MGMT_REG);
+  Wire.write(0x00);
   Wire.endTransmission(true);
+}
 
-  // ACCEL config
+void configure_accel_range() {
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x1C);
+  Wire.write(ACCEL_CONFIG);
   Wire.write(0x00);  // set to default range.
   Wire.endTransmission(true);
+}
 
-  // Configure gyroscope range to ±250 °/s
+// Configure gyroscope range to ±250 °/s
+void configure_gyro() {
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x1B);  // GYRO_CONFIG register
-  Wire.write(0x00);  // ±250dps
+  Wire.write(GYRO_CONFIG);  // GYRO_CONFIG register
+  Wire.write(0x00);         // ±250dps
   Wire.endTransmission(true);
+}
 
+void setup_imu() {
+  wake_mpu();
+  configure_gyro();
+  configure_accel_range();
   Serial.println("MPU6050 initialized");
 }
 
 void read_imu_accel_data(void) {
   int16_t accel_x, accel_y, accel_z, temp_raw, gyro_x, gyro_y, gyro_z;
-  static uint8_t reg_addr = 0x3B; /* ACCEL_XOUT_H */
-
-  uint8_t read_buffer[READ_BUF_SIZE];
 
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(reg_addr);
+  Wire.write(ACCEL_OUT_H);
   Wire.endTransmission(false);
 
-  size_t response = Wire.requestFrom(MPU_ADDR, READ_BUF_SIZE, true);
-  Serial.printf("Bytes written: %d\n", response);
+  size_t written_bytes = Wire.requestFrom(MPU_ADDR, READ_BUF_SIZE);
+  if (written_bytes == 0) {
+    Serial.println("Read bytes error");
+  }
 
   // Wire.readBytes(read_buffer, READ_BUF_SIZE);
 
@@ -169,8 +111,8 @@ void read_imu_accel_data(void) {
   gyro_z = (Wire.read() << 8) | Wire.read();
   float temp_c = convert_temp(temp_raw);
 
-  Serial.printf("accel[%d %d %d] gyro[%d %d %d] temp=%.2fC\n", accel_x, accel_y,
-                accel_z, gyro_x, gyro_y, gyro_z, temp_c);
+  Serial.printf("accel: [%d %d %d] gyro: [%d %d %d] temp: %.2fC\n", accel_x,
+                accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_c);
 }
 
 // /*

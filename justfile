@@ -1,8 +1,8 @@
 build:
   idf.py build
 
-flash: build
-  idf.py flash monitor
+upload:
+  pio run -t upload
 
-clean: 
-  idf.py fullclean
+upload-and-monitor:
+    pio run -t upload -t monitor
