@@ -31,6 +31,7 @@ jobs:
         run: pio test -e native
 
   build-firmware:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
