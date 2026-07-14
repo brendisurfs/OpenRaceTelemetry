@@ -1,23 +1,29 @@
 #include <Arduino.h>
+#include <TaskScheduler.h>
 
 #include "Wire.h"
 #include "blink.h"
-#include "esp32-hal-gpio.h"
-#include "esp32-hal.h"
 #include "imu.h"
+
+Scheduler runner;
+
+Task task_read_imu(100, TASK_FOREVER, &read_imu_accel_data);
+Task task_blink_led(500, TASK_FOREVER, &blink_led);
 
 void setup() {
   Wire.begin();
   Serial.begin(9600);
 
-  Serial.println("Starting up config sequence");
   configure_led();
   setup_imu();
+
+  // add our tasks here
+  runner.addTask(task_read_imu);
+  runner.addTask(task_blink_led);
+
+  // Make sure to enable all the tasks we want.
+  task_blink_led.enable();
+  task_read_imu.enable();
 }
 
-void loop() {
-  digitalWrite(LED_BUILTIN, LOW);
-  read_imu_accel_data();
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-}
+void loop() { runner.execute(); }

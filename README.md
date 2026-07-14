@@ -35,6 +35,14 @@ The software includes components for the ESP32, IMU, and other components added 
 #### Requirements
 
 - [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (the `pio` CLI)
+- [`just`](https://github.com/casey/just) — command runner used to drive builds/uploads/tests
+  - macOS: `brew install just`
+  - Linux: `cargo install just`, or see the [packaging status table](https://github.com/casey/just#packages) for your distro's package manager
+  - Windows: `winget install --id Casey.Just` or `scoop install just`
+- [clang / clangd](https://clangd.llvm.org/installation) — for editor autocomplete and diagnostics against `compile_commands.json`
+  - macOS: `brew install llvm`
+  - Linux: install the `clangd` package for your distro (e.g. `apt install clangd` on Debian/Ubuntu, `pacman -S clang` on Arch), or use the [LLVM apt repository](https://apt.llvm.org/) for the latest version
+  - Windows: install the [LLVM release](https://github.com/llvm/llvm-project/releases) (includes `clangd`), or `winget install LLVM.LLVM`
 - An Arduino Nano ESP32 (or update `platformio.ini` to match your board)
 - A USB cable to connect the board to your computer
 
@@ -43,17 +51,13 @@ The software includes components for the ESP32, IMU, and other components added 
 1. Connect the board to your computer via USB.
 2. Put the board into bootloader mode. On the Arduino Nano ESP32, double-press the reset button — the onboard LED will pulse, indicating it's ready to receive firmware.
 3. Update `upload_port` in `platformio.ini` to match the port your board enumerates as (find it with `pio device list`).
-4. Upload the firmware:
+4. Build, upload, and monitor serial output in one step:
 
    ```bash
-   pio run -t upload
+   just upload-and-monitor
    ```
 
-5. Optionally, monitor serial output:
-
-   ```bash
-   pio device monitor
-   ```
+   See the `justfile` for individual `build`, `upload`, `test-native`, and `test-esp32` recipes.
 
 ### Contributing
 

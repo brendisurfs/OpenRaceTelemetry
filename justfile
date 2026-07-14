@@ -1,5 +1,5 @@
 build:
-    idf.py build
+    pio run -e esp32dev
 
 upload:
     pio run -t upload

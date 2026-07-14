@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#include <cstddef>
+
 #include "imu_math.h"
 #include "pins_arduino.h"
 
@@ -86,16 +88,6 @@ void read_imu_accel_data(void) {
     Serial.println("Read bytes error");
   }
 
-  // Wire.readBytes(read_buffer, READ_BUF_SIZE);
-
-  // accel_x = (read_buffer[0] << 8) | read_buffer[1];
-  // accel_y = (read_buffer[2] << 8) | read_buffer[3];
-  // accel_z = (read_buffer[4] << 8) | read_buffer[5];
-  // temp_raw = (read_buffer[6] << 8) | read_buffer[7];
-  // gyro_x = (read_buffer[8] << 8) | read_buffer[9];
-  // gyro_y = (read_buffer[10] << 8) | read_buffer[11];
-  // gyro_z = (read_buffer[12] << 8) | read_buffer[13];
-
   accel_x = combine_bytes(Wire.read(), Wire.read());
   accel_y = combine_bytes(Wire.read(), Wire.read());
   accel_z = combine_bytes(Wire.read(), Wire.read());
@@ -111,31 +103,3 @@ void read_imu_accel_data(void) {
       accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_raw,
       temp_celsius);
 }
-
-// /*
-//  * Reads accel/gyro/temp data from the imu
-//  */
-// static void imu_read_accel_data(void) {
-//   uint8_t reg_addr = 0x3B; /* ACCEL_XOUT_H */
-//   uint8_t read_buffer[14];
-
-//   esp_err_t err = i2c_master_transmit_receive(
-//       s_imu_dev_handle, &reg_addr, 1, read_buffer, sizeof(read_buffer), 500);
-
-//   ESP_ERROR_CHECK(err);
-
-//   // This is just a fancy way of combining the bits sent over I2C.
-//   // Shift the high bit left by 8 bits, append the low bit to create bytes.
-//   int16_t accel_x = (read_buffer[0] << 8) | read_buffer[1];
-//   int16_t accel_y = (read_buffer[2] << 8) | read_buffer[3];
-//   int16_t accel_z = (read_buffer[4] << 8) | read_buffer[5];
-//   int16_t temp_raw = (read_buffer[6] << 8) | read_buffer[7];
-//   int16_t gyro_x = (read_buffer[8] << 8) | read_buffer[9];
-//   int16_t gyro_y = (read_buffer[10] << 8) | read_buffer[11];
-//   int16_t gyro_z = (read_buffer[12] << 8) | read_buffer[13];
-
-//   float temp_c = convert_temp(temp_raw);
-
-//   ESP_LOGI(IMU_TAG, "accel[%d %d %d] gyro[%d %d %d] temp=%.2fC", accel_x,
-//            accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_c);
-// }
