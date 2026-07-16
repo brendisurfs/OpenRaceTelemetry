@@ -85,7 +85,10 @@ void test_complementary_filter() {
   float gyro_rate = gyro_x / 131.0;  // Gyroscope Sensitivity
 
   float expected = 0.0;
-  float actual = complemetary_filter(roll, gyro_rate, 0.01);
+
+  float actual = complemetary_filter(
+      {.accel_angle = roll, .gyro_rate = gyro_rate, .time_delta = 0.01});
+
   UNITY_TEST_ASSERT_EQUAL_FLOAT(
       expected, actual, 84, "Expected complemetary filter to match expected");
 }
