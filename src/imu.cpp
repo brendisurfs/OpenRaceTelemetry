@@ -1,7 +1,11 @@
+#include "imu.h"
+
 #include <Arduino.h>
 #include <Wire.h>
 
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
 
 #include "imu_math.h"
 #include "pins_arduino.h"
@@ -76,9 +80,36 @@ void setup_imu() {
   Serial.println("MPU6050 initialized");
 }
 
-void read_imu_accel_data(void) {
-  int16_t accel_x, accel_y, accel_z, temp_raw, gyro_x, gyro_y, gyro_z;
+imu_data_t collect_imu_data(void) {
+  imu_data_t data;
 
+  data.accel_x = combine_bytes(Wire.read(), Wire.read());
+  data.accel_y = combine_bytes(Wire.read(), Wire.read());
+  data.accel_z = combine_bytes(Wire.read(), Wire.read());
+  data.temp_raw = combine_bytes(Wire.read(), Wire.read());
+  data.gyro_x = combine_bytes(Wire.read(), Wire.read());
+  data.gyro_y = combine_bytes(Wire.read(), Wire.read());
+  data.gyro_z = combine_bytes(Wire.read(), Wire.read());
+
+  return data;
+}
+
+void print_imu_data(imu_data_t data) {
+  float temp_celsius = convert_temp(data.temp_raw);
+
+  float pitch = calculate_pitch(data.accel_x);
+  float roll = calculate_roll(data.accel_y, data.accel_z);
+
+  Serial.printf("Pitch: %.2f Roll: %.2f temp_c: %.2fC\n", pitch, roll,
+                temp_celsius);
+
+  // Serial.printf(
+  //       "accel: [%d %d %d] gyro: [%d %d %d] temp_raw: %d temp_c: %.2fC\n",
+  //       data.accel_x, data.accel_y, data.accel_z, data.gyro_x, data.gyro_y,
+  //       data.gyro_z, data.temp_raw, temp_celsius);
+}
+
+void read_imu_accel_data(void) {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(ACCEL_OUT_H);
   Wire.endTransmission(false);
@@ -88,18 +119,9 @@ void read_imu_accel_data(void) {
     Serial.println("Read bytes error");
   }
 
-  accel_x = combine_bytes(Wire.read(), Wire.read());
-  accel_y = combine_bytes(Wire.read(), Wire.read());
-  accel_z = combine_bytes(Wire.read(), Wire.read());
-  temp_raw = combine_bytes(Wire.read(), Wire.read());
-  gyro_x = combine_bytes(Wire.read(), Wire.read());
-  gyro_y = combine_bytes(Wire.read(), Wire.read());
-  gyro_z = combine_bytes(Wire.read(), Wire.read());
+  imu_data_t data = collect_imu_data();
 
-  float temp_celsius = convert_temp(temp_raw);
-
-  Serial.printf(
-      "accel: [%d %d %d] gyro: [%d %d %d] temp_raw: %d temp_c: %.2fC\n",
-      accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temp_raw,
-      temp_celsius);
+  float roll = calculate_roll(data.accel_y, data.accel_z);
+  float gyro_rate = data.gyro_x / 131.0;  // Gyroscope Sensitivity
+  print_imu_data(data);
 }
