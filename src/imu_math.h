@@ -23,4 +23,10 @@ float calculate_roll(int16_t accel_y, int16_t accel_z);
  */
 float calculate_pitch(int16_t accel_x);
 
-float complemetary_filter(float angle, float gyro_rate, float time_delta);
+struct CompFilterData {
+  float accel_angle;
+  float gyro_rate;
+  float time_delta;
+};
+
+float complemetary_filter(struct CompFilterData data);
