@@ -61,7 +61,7 @@ The software includes components for the ESP32, IMU, and other components added 
 
 ### Contributing
 
-[TODO]
+Contributions, such as ideas, bug fixes, and features, are always welcome! However, do note that if the feature or idea does not fully align with the goal of this project (a stable, robust open DIY platform for race telemetry) it may not be considered. If you would like to contribute, please look at the open issues, or open an issue.
 
 ### Troubleshooting
 
