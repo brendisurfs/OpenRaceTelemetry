@@ -27,6 +27,12 @@ struct CompFilterData {
   float accel_angle;
   float gyro_rate;
   float time_delta;
+  float prev_angle;
 };
 
+/**
+ * Blends an accelerometer-derived angle with an integrated gyro rate.
+ * Callers own prev_angle across iterations (e.g. store the return value
+ * and feed it back in as data.prev_angle on the next call).
+ */
 float complemetary_filter(struct CompFilterData data);
