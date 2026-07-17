@@ -1,3 +1,21 @@
+#include <cstdint>
+
+/**
+ * 20ms interval
+ * ms = 1000 / Hz
+ */
+static const unsigned long IMU_READ_INTERVAL = 20;
+
+typedef struct ImuData {
+  int16_t accel_x;
+  int16_t accel_y;
+  int16_t accel_z;
+  int16_t temp_raw;
+  int16_t gyro_x;
+  int16_t gyro_y;
+  int16_t gyro_z;
+} imu_data_t;
+
 void configure_i2c_wire_interface();
 
 /*

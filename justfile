@@ -5,7 +5,11 @@ upload:
     pio run -t upload
 
 upload-and-monitor:
-    pio run -t upload -t monitor
+    pio run -e esp32dev -t upload -t monitor
+
+
+monitor: 
+  pio run -t monitor
 
 # Builds and links to the hardware.
 test-esp32:

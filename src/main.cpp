@@ -7,13 +7,17 @@
 
 Scheduler runner;
 
-Task task_read_imu(100, TASK_FOREVER, &read_imu_accel_data);
-Task task_blink_led(500, TASK_FOREVER, &blink_led);
+Task task_blink_led(400, TASK_FOREVER, &blink_led);
+
+Task task_read_imu(IMU_READ_INTERVAL, TASK_FOREVER, &read_imu_accel_data);
 
 void setup() {
   Wire.begin();
-  Serial.begin(9600);
 
+  // A baud rate of 115200 seems to work well.
+  Serial.begin(115200);
+
+  // Set up our peripherals and LED to blink
   configure_led();
   setup_imu();
 
@@ -26,4 +30,6 @@ void setup() {
   task_read_imu.enable();
 }
 
-void loop() { runner.execute(); }
+void loop() {
+  runner.execute();
+}

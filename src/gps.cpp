@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
-/*
+/**
  * NMEA messages are ASCII printable messages with a maximum of 82 chars.
  */
 NmeaMessage parse_nmea_message(const char* nmea_message, size_t length) {
