@@ -36,13 +36,11 @@ float calculate_pitch(int16_t accel_x) {
 }
 
 float complemetary_filter(const struct CompFilterData data) {
-  static float prev_angle = 0.0;
   static const float alpha = 0.98;
 
-  float new_angle = alpha * (prev_angle + data.gyro_rate * data.time_delta) +
-                    (1 - alpha) * data.accel_angle;
+  float new_angle =
+      alpha * (data.prev_angle + data.gyro_rate * data.time_delta) +
+      (1 - alpha) * data.accel_angle;
 
-  prev_angle = new_angle;
-
-  return roundf(new_angle);
+  return new_angle;
 }
