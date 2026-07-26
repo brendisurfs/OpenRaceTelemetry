@@ -19,3 +19,5 @@ typedef struct NmeaMessage {
  * Parses the NMEA bytes from the GPS sensor
  */
 NmeaMessage parse_nmea_message(const char* nmea_message, size_t length);
+
+void read_gps_message(void);

@@ -22,9 +22,6 @@ int16_t combine_bytes(uint8_t high, uint8_t low) {
   return (int16_t)((high << 8 | low));
 }
 
-/**
- * Roll angle is equal to arctan(Ay/Az)
- */
 float calculate_roll(int16_t accel_y, int16_t accel_z) {
   return std::atan2(accel_y, accel_z) * (180.0f / M_PI);
 }
