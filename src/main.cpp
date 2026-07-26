@@ -7,7 +7,14 @@
 #include "gps.h"
 #include "imu.h"
 
+enum SystemState {
+  STARTUP,
+  SHUTDOWN,
+};
+
 Scheduler runner;
+
+static const char* TAG = "MAIN";
 
 Task task_blink_led(400, TASK_FOREVER, &blink_led);
 

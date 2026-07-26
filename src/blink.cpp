@@ -1,10 +1,13 @@
 #include <Arduino.h>
 
 #include "esp32-hal-gpio.h"
+#include "esp32-hal-log.h"
 #include "esp32-hal.h"
 #include "hal/gpio_types.h"
 #include "io_pin_remap.h"
 #include "pins_arduino.h"
+
+static const char* BLINK_TAG = "BLINK";
 
 /**
  * Different flashes for different states of the system.
@@ -17,6 +20,7 @@ enum FlashDelay {
 };
 
 void configure_led(void) {
+  ESP_LOGI(BLINK_TAG, "Configuring LEDs");
   pinMode(LED_BUILTIN, GPIO_MODE_OUTPUT);
 }
 
