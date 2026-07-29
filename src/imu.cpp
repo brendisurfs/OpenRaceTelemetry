@@ -8,7 +8,6 @@
 #include <cstdlib>
 
 #include "imu_math.h"
-#include "pins_arduino.h"
 
 #define MPU_ADDR 0x68
 #define PWR_MGMT_REG 0x6B
@@ -19,13 +18,10 @@
 #define READ_BUF_SIZE 14
 
 void configure_i2c_wire_interface() {
-  Wire.setPins(A4, A5);
+  // Uses the board variant's default I2C pins. On boards without external
+  // pull-up resistors on SDA/SCL, call Wire.setSDA()/Wire.setSCL() before
+  // begin() and enable INPUT_PULLUP on those pins explicitly.
   Wire.begin();
-
-  // No external pull-up resistors on SDA/SCL — fall back to the ESP32's
-  // weak internal pull-ups so the bus doesn't float.
-  pinMode(A4, INPUT_PULLUP);
-  pinMode(A5, INPUT_PULLUP);
 }
 
 /*
@@ -34,7 +30,7 @@ void configure_i2c_wire_interface() {
  * device address like 0x68/0x69.
  */
 void scan_i2c_bus(void) {
-  Serial.printf("Scanning I2C bus (SDA=%d, SCL=%d)...\n", A4, A5);
+  Serial.println("Scanning I2C bus...");
 
   int found = 0;
   for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
