@@ -6,6 +6,8 @@ enum FlashDelay {
   BLINK_WARMUP = 200,
   // 20 ms flash timeout
   BLINK_SUCCESS = 20,
+  BLINK_ERROR = 100,
+  BLINK_WAIT = 1000,
 };
 
 /*
@@ -24,3 +26,5 @@ void gps_warmup_blink(void);
 //  * warmed up and connected.
 //  */
 void gps_connected_blink(void);
+
+void i2c_error_blink(void);
