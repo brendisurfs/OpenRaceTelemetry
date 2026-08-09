@@ -37,3 +37,18 @@ void gps_connected_blink(void) {
     HAL_Delay(BLINK_SUCCESS);
   }
 }
+
+// Blink pattern: .._______.._______
+void i2c_error_blink(void) {
+  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+  HAL_Delay(BLINK_ERROR);
+  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
+
+  HAL_Delay(BLINK_ERROR);
+
+  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+  HAL_Delay(BLINK_ERROR);
+  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
+
+  HAL_Delay(BLINK_WAIT);
+}
