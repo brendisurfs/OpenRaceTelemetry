@@ -12,14 +12,15 @@ float convert_temp(int16_t temp_raw);
 int16_t combine_bytes(uint8_t high, uint8_t low);
 
 /**
- * Calculates roll by taking the
- * arctan of accel_y over accel_z
+ * Calculates roll by taking the arctan of accel_y over accel_z.
+ *
+ * Roll angle is equal to arctan(Ay/Az)
  */
 float calculate_roll(int16_t accel_y, int16_t accel_z);
 
 /**
- * Calculates the pitch angle by taking the arcsin of
-  accel_x / gravity (9.8m/s^2)
+ * Calculates the pitch angle by taking the arcsin of accel_x / gravity
+ * (9.8m/s^2)
  */
 float calculate_pitch(int16_t accel_x);
 
