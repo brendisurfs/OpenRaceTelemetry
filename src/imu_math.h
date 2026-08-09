@@ -28,7 +28,7 @@ struct CompFilterData {
   float gyro_rate;
   float time_delta;
   float prev_angle;
-};
+} typedef comp_filter_data_t;
 
 /**
  * Blends an accelerometer-derived angle with an integrated gyro rate.
