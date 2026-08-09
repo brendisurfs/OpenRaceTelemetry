@@ -1,35 +1,47 @@
-#include <Arduino.h>
-#include <TaskScheduler.h>
+#include <stm32f411xe.h>
 
-#include "Wire.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_rcc.h"
+
 #include "blink.h"
-#include "imu.h"
 
-Scheduler runner;
+static void SystemClock_Config(void) {
+  RCC_OscInitTypeDef osc_init{};
+  osc_init.HSIState = RCC_HSI_ON;
+  osc_init.PLL.PLLState = RCC_PLL_NONE;
+  osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  osc_init.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
 
-Task task_blink_led(400, TASK_FOREVER, &blink_led);
+  HAL_RCC_OscConfig(&osc_init);
 
-Task task_read_imu(IMU_READ_INTERVAL, TASK_FOREVER, &read_imu_accel_data);
+  RCC_ClkInitTypeDef clk_config{};
+  clk_config.ClockType = RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK |
+                         RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 
-void setup() {
-  Wire.begin();
+  clk_config.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  clk_config.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  clk_config.APB1CLKDivider = RCC_HCLK_DIV1;
+  clk_config.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  // A baud rate of 115200 seems to work well.
-  Serial.begin(115200);
-
-  // Set up our peripherals and LED to blink
-  configure_led();
-  setup_imu();
-
-  // add our tasks here
-  runner.addTask(task_read_imu);
-  runner.addTask(task_blink_led);
-
-  // Make sure to enable all the tasks we want.
-  task_blink_led.enable();
-  task_read_imu.enable();
+  HAL_RCC_ClockConfig(&clk_config, FLASH_LATENCY_0);
 }
 
-void loop() {
-  runner.execute();
+/**
+ * The vector table's SysTick entry falls back to a weak, empty handler unless
+ * we provide this. CubeMX normally generates this in stm32f4xx_it.c;
+ * without it, SysTick fires every 1ms but never calls HAL_IncTick(),
+ * so uwTick never advances and HAL_Delay() spins forever.
+ */
+extern "C" void SysTick_Handler(void) {
+  HAL_IncTick();
+}
+
+int main(void) {
+  HAL_Init();
+  SystemClock_Config();
+  led_gpio_init();
+
+  while (1) {
+    gps_warmup_blink();
+  }
 }
