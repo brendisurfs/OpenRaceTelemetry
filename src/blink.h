@@ -1,7 +1,26 @@
+/**
+ * Different flashes for different states of the system.
+ */
+enum FlashDelay {
+  //  200ms for warming up
+  BLINK_WARMUP = 200,
+  // 20 ms flash timeout
+  BLINK_SUCCESS = 20,
+};
+
 /*
  * sets up gpio led
  */
-void configure_led();
+void led_gpio_init(void);
 
-// Blink
-void blink_led();
+// /**
+//  * Blinks at a slower, consistent rate
+//  * to show that the GPS is warming up.
+//  */
+void gps_warmup_blink(void);
+
+// /**
+//  * Flashes the LED when the GPS has successfully
+//  * warmed up and connected.
+//  */
+void gps_connected_blink(void);
