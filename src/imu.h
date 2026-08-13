@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 
 /**
@@ -16,7 +17,7 @@ typedef struct ImuData {
   int16_t gyro_z;
 } imu_data_t;
 
-void configure_i2c_wire_interface();
+// void configure_i2c_wire_interface();
 
 /*
  * Probes every 7-bit I2C address (0x08-0x77) on bus_handle and logs which
@@ -27,5 +28,10 @@ void scan_i2c_bus();
 
 // Sets up the IMU interface
 void setup_imu();
+
+/**
+ * unpacks the IMUs data via a burst read of 14-bytes into signed 16-bit fields.
+ */
+imu_data_t collect_imu_data(const uint8_t* buf);
 
 void read_imu_accel_data(void);
