@@ -40,7 +40,7 @@ int main(void) {
   HAL_Init();
   SystemClock_Config();
   led_gpio_init();
-
+  // When button pressed, change state
   while (1) {
     gps_warmup_blink();
   }
