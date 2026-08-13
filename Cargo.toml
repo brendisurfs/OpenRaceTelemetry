@@ -1,5 +1,3 @@
 [workspace]
-members = ["core", "firmware", "desktop"]
-
-
-[dependencies]
+members = ["firmware", "desktop", "shared-utils"]
+resolver = "3"
