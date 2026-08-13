@@ -1,7 +1,6 @@
 #include "imu.h"
 #include "blink.h"
 
-#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 
@@ -9,13 +8,11 @@
 
 #include "imu_math.h"
 #include "stm32f411xe.h"
-#include "stm32f4xx_hal_cortex.h"
 #include "stm32f4xx_hal_def.h"
 #include "stm32f4xx_hal_gpio.h"
 #include "stm32f4xx_hal_gpio_ex.h"
 #include "stm32f4xx_hal_i2c.h"
 #include "stm32f4xx_hal_rcc.h"
-#include "stm32f4xx_hal_uart.h"
 
 #define MPU_ADDR 0x68
 #define PWR_MGMT_REG 0x6B
@@ -25,12 +22,35 @@
 
 #define READ_BUF_SIZE 14
 
-UART_HandleTypeDef huart1;
+// HAL takes the 8-bit address, so the 7-bit device address is shifted up one.
+#define MPU_ADDR_8BIT (MPU_ADDR << 1)
+#define I2C_TIMEOUT_MS 100
 
-void I2C_Error_Handler() {
+/**
+ * HAL stores per-bus state in this handle, so every HAL_I2C_* call after init
+ * has to reference the same object. it lives at file scope for that reason.
+ */
+static I2C_HandleTypeDef i2c_handle_config;
+
+/**
+ * A generic error handler for i2c config/setup.
+ * As of writing this, its just an error blink, but later would be nice to
+ * either log it or do something more productive, if possible.
+ */
+void handle_i2c_error() {
   while (1) {
     i2c_error_blink();
   }
+}
+
+/**
+ * Writes a single byte to one MPU6050 register.
+ * HAL_I2C_Mem_Write handles the start -> address -> register -> data -> stop
+ * sequence that the Arduino Wire implementation spread across four calls.
+ */
+static HAL_StatusTypeDef mpu_write_reg(uint8_t reg, uint8_t value) {
+  return HAL_I2C_Mem_Write(&i2c_handle_config, MPU_ADDR_8BIT, reg,
+                           I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MS);
 }
 
 /*
@@ -70,13 +90,14 @@ void configure_i2c_wire_interface() {
       .NoStretchMode = I2C_NOSTRETCH_DISABLE,
 
   };
-  I2C_HandleTypeDef handle{};
-  handle.Instance = I2C1;
-  handle.Init = init_config;
 
-  HAL_StatusTypeDef status = HAL_I2C_Init(&handle);
+  i2c_handle_config.Instance = I2C1;
+  i2c_handle_config.Init = init_config;
+
+  HAL_StatusTypeDef status = HAL_I2C_Init(&i2c_handle_config);
+
   if (status != HAL_OK) {
-    I2C_Error_Handler();
+    handle_i2c_error();
   }
 }
 
@@ -90,55 +111,43 @@ void scan_i2c_bus(void) {
 }
 
 void wake_mpu() {
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(PWR_MGMT_REG);
-  Wire.write(0x00);
-  Wire.endTransmission(true);
+  if (mpu_write_reg(PWR_MGMT_REG, 0x00) != HAL_OK) {
+    handle_i2c_error();
+  }
 }
 
 void configure_accel_range() {
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(ACCEL_CONFIG);
-  Wire.write(0x00);  // set to default range.
-  Wire.endTransmission(true);
+  if (mpu_write_reg(ACCEL_CONFIG, 0x00) != HAL_OK) {
+    handle_i2c_error();
+  }
 }
 
 // Configure gyroscope range to ±250 °/s
 void configure_gyro() {
-  MPU_Region_InitTypeDef config{};
-  config.Enable = 1;
-
-  // HAL_MPU_ConfigRegion( *MPU_Init)
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(GYRO_CONFIG);  // GYRO_CONFIG register
-  Wire.write(0x00);         // ±250dps
-  Wire.endTransmission(true);
-
-  uint8_t uart_data[10] = {0};
-  uint16_t len_of_msg = sprintf(uart_data, "hey %s\n", "cuh");
-  HAL_UART_Transmit(&huart1, uart_data, len_of_msg, 100);
+  if (mpu_write_reg(GYRO_CONFIG, 0x00) != HAL_OK) {
+    handle_i2c_error();
+  }
 }
 
 void setup_imu() {
   configure_i2c_gpio();
   configure_i2c_wire_interface();
 
-  // wake_mpu();
-  // configure_gyro();
-  // configure_accel_range();
-  // Serial.println("MPU6050 initialized");
+  wake_mpu();
+  configure_gyro();
+  configure_accel_range();
 }
 
-imu_data_t collect_imu_data(void) {
+imu_data_t collect_imu_data(const uint8_t* buf) {
   imu_data_t data;
 
-  data.accel_x = combine_bytes(Wire.read(), Wire.read());
-  data.accel_y = combine_bytes(Wire.read(), Wire.read());
-  data.accel_z = combine_bytes(Wire.read(), Wire.read());
-  data.temp_raw = combine_bytes(Wire.read(), Wire.read());
-  data.gyro_x = combine_bytes(Wire.read(), Wire.read());
-  data.gyro_y = combine_bytes(Wire.read(), Wire.read());
-  data.gyro_z = combine_bytes(Wire.read(), Wire.read());
+  data.accel_x = combine_bytes(buf[0], buf[1]);
+  data.accel_y = combine_bytes(buf[2], buf[3]);
+  data.accel_z = combine_bytes(buf[4], buf[5]);
+  data.temp_raw = combine_bytes(buf[6], buf[7]);
+  data.gyro_x = combine_bytes(buf[8], buf[9]);
+  data.gyro_y = combine_bytes(buf[10], buf[11]);
+  data.gyro_z = combine_bytes(buf[12], buf[13]);
 
   return data;
 }
@@ -160,15 +169,19 @@ void print_raw_imu_data(imu_data_t data) {
 }
 
 void read_imu_accel_data(void) {
-  Wire.beginTransmission(MPU_ADDR);
-  Wire.write(ACCEL_OUT_H);
-  Wire.endTransmission(false);
+  uint8_t buf[READ_BUF_SIZE] = {0};
 
-  size_t written_bytes = Wire.requestFrom(MPU_ADDR, READ_BUF_SIZE);
-  if (written_bytes == 0) {
-    // Serial.println("Read bytes error");
+  // burst read the mpu6050 data.
+  HAL_StatusTypeDef status = HAL_I2C_Mem_Read(
+      &i2c_handle_config, MPU_ADDR_8BIT, ACCEL_OUT_H, I2C_MEMADD_SIZE_8BIT, buf,
+      READ_BUF_SIZE, I2C_TIMEOUT_MS);
+
+  if (status != HAL_OK) {
+    // we drop the current sample if the read fails.
+    // the last thing we want to do is hang on reading.
+    return;
   }
 
-  imu_data_t data = collect_imu_data();
+  imu_data_t data = collect_imu_data(buf);
   print_roll_pitch(data);
 }
