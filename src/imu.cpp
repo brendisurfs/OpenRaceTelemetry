@@ -45,15 +45,15 @@ void handle_i2c_error() {
 
 /**
  * Writes a single byte to one MPU6050 register.
- * HAL_I2C_Mem_Write handles the start -> address -> register -> data -> stop
- * sequence that the Arduino Wire implementation spread across four calls.
+ * HAL_I2C_Mem_Write handles the sequence that the Arduino Wire implementation
+ * spread across four calls.
  */
 static HAL_StatusTypeDef mpu_write_reg(uint8_t reg, uint8_t value) {
   return HAL_I2C_Mem_Write(&i2c_handle_config, MPU_ADDR_8BIT, reg,
                            I2C_MEMADD_SIZE_8BIT, &value, 1, I2C_TIMEOUT_MS);
 }
 
-/*
+/**
  * Enable our GPIO for the I2C bus
  */
 void configure_i2c_gpio(void) {
@@ -101,10 +101,10 @@ void configure_i2c_wire_interface() {
   }
 }
 
-/*
+/**
  * Probes every 7-bit I2C address (0x08-0x77) on bus_handle and logs which
- * ones ACK. Use this to sanity-check wiring before trusting a fixed
- * device address like 0x68/0x69.
+ * ones ACK. Use this to sanity-check wiring before trusting a fixed device
+ * address.
  */
 void scan_i2c_bus(void) {
   // TODO: implement scan.
