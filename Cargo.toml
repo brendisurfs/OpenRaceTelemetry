@@ -1,5 +1,6 @@
 [workspace]
 members = ["firmware", "desktop", "shared-utils"]
+default-members = ["desktop", "shared-utils"]
 resolver = "3"
 
 
