@@ -1,3 +1,33 @@
 [workspace]
 members = ["firmware", "desktop", "shared-utils"]
 resolver = "3"
+
+
+[workspace.dependencies]
+cortex-m-rt = "0.7.5"
+defmt = "1.1.1"
+defmt-rtt = "1.0.0"
+embassy-boot-stm32 = "0.8.0"
+embassy-executor = { version = "0.10.0", features = [
+  "platform-cortex-m",
+  "executor-thread",
+  "defmt",
+] }
+cortex-m = { version = "0.7.6", features = [
+  "inline-asm",
+  "critical-section-single-core",
+] }
+
+
+embassy-stm32 = { version = "0.6.0", features = [
+  "stm32f411ce",
+  "memory-x",
+  "rt",
+  "time-driver-any",
+] }
+
+embassy-time = "0.5.1"
+panic-probe = "1.0.0"
+
+[profile.release]
+debug = 2

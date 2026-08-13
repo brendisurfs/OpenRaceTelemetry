@@ -3,4 +3,24 @@ name = "firmware"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "ort_firmware" # name of the binary produced
+path = "src/main.rs"
+test = false
+bench = false
+
 [dependencies]
+cortex-m-rt = { workspace = true }
+cortex-m = { workspace = true }
+defmt = { workspace = true }
+defmt-rtt = { workspace = true }
+embassy-boot-stm32 = { workspace = true }
+embassy-executor = { workspace = true }
+embassy-stm32 = { workspace = true }
+embassy-time = { workspace = true }
+panic-probe = { workspace = true }
+
+[package.metadata.embassy]
+build = [
+  { target = "thumbv7em-none-eabi", artifact-dir = "out/examples/stm32f3" },
+]

@@ -1,3 +1,5 @@
-fn main() {
-    println!("Hello, world!");
-}
+#![no_std]
+#![no_main]
+
+#[embassy::exe]
+async fn main() -> ! {}
