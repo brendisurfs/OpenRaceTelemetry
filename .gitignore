@@ -67,3 +67,8 @@ sdkconfig.old
 checklist.md
 compile_commands.json
 .pio/
+
+
+# Added by cargo
+
+/target
