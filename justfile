@@ -1,4 +1,6 @@
-bin := "target/thumbv7em-none-eabi/release/embassy-fun"
+pkg := "firmware"
+target := "thumbv7em-none-eabi"
+bin := "target/" + target + "/release/ort_firmware"
 chip := "STM32F411CE"
 
 # NOTE: --connect-under-reset is deliberately NOT used here. It requires NRST to
@@ -12,12 +14,11 @@ probe_opts := "--chip " + chip
 default: run
 
 # Flash + RTT log via ST-Link/SWD (stays attached; ctrl-C to detach)
-run:
-  cargo run --release
+run: build
+  probe-rs run {{probe_opts}} {{bin}}
 
 # Build, flash via ST-Link/SWD, reset, and detach (no RTT session)
-flash:
-  cargo build --release
+flash: build
   probe-rs download {{probe_opts}} {{bin}}
   probe-rs reset {{probe_opts}}
 
@@ -33,16 +34,15 @@ unbrick:
   @echo "  just flash"
 
 # Flash via USB DFU bootloader (put chip in DFU mode first: hold BOOT0, tap NRST, release BOOT0)
-dfu:
-  cargo build --release
-  cargo objcopy --release -- -O binary {{bin}}.bin
+dfu: build
+  cargo objcopy -p {{pkg}} --target {{target}} --release -- -O binary {{bin}}.bin
   dfu-util -a 0 -s 0x08000000:leave -D {{bin}}.bin -d 0483:df11
 
 probes:
   probe-rs list
 
 build:
-  cargo build --release
+  cargo build -p {{pkg}} --target {{target}} --release
 
 clean:
   cargo clean
