@@ -5,13 +5,7 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
-	/**
-	 *  Parses an NMEA sentence and hands the frontend the string-shaped DTO.
-	 * 
-	 *  The `.map(Into::into)` here is the whole conversion cost: ingest and the
-	 *  event log stay in `ort_types`' byte representation, and strings are
-	 *  allocated once per IPC call rather than once per sample.
-	 */
+	/**  Parses an NMEA sentence and hands the frontend the string-shaped DTO. */
 	parseNmea: (sentence: string) => __TAURI_INVOKE<{
 	talker: string,
 	messageType: string,
@@ -19,9 +13,9 @@ export const commands = {
 	/**
 	 *  Decodes one raw MPU6050 burst read for display.
 	 * 
-	 *  Placeholder wiring: the real source is the ingest path. It exists now so
-	 *  `ImuDataDto` is reachable from the exporter — a type only reaches
-	 *  `bindings.ts` if a command mentions it.
+	 *  NOTE: Placeholder wiring. The real source is the ingest path.
+	 *  It exists now so `ImuDataDto` is reachable from the exporter,
+	 *  a type only reaches `bindings.ts` if a command mentions it.
 	 */
 	imuSample: (buf: number[]) => __TAURI_INVOKE<{
 	accelX: number,
@@ -38,8 +32,8 @@ export const commands = {
 /**
  *  One IMU sample, in raw register units.
  * 
- *  The fields need no conversion — they are already `i16` — but the DTO still
- *  earns its place: it keeps `specta` out of `ort_types`, and it gives the
+ *  The fields need no conversion (they are already `i16`).
+ *  DTO keeps `specta` out of `ort_types`, and it gives the
  *  frontend camelCase names to match `NmeaMessageDto`.
  */
 export type ImuDataDto = {
