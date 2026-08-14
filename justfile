@@ -15,38 +15,37 @@ default: run
 
 # Flash + RTT log via ST-Link/SWD (stays attached; ctrl-C to detach)
 run: build
-  probe-rs run {{probe_opts}} {{bin}}
+    probe-rs run {{ probe_opts }} {{ bin }}
 
 # Build, flash via ST-Link/SWD, reset, and detach (no RTT session)
 flash: build
-  probe-rs download {{probe_opts}} {{bin}}
-  probe-rs reset {{probe_opts}}
+    probe-rs download {{ probe_opts }} {{ bin }}
+    probe-rs reset {{ probe_opts }}
 
 # Reset the target without reflashing
 reset:
-  probe-rs reset {{probe_opts}}
+    probe-rs reset {{ probe_opts }}
 
 # If a flash/attach fails, the target is usually stuck in WFI and ignoring SWD.
 # Enter the ROM bootloader (hold BOOT0, tap NRST, release BOOT0) so your
 # firmware isn't running, then re-run `just flash`.
 unbrick:
-  @echo "Hold BOOT0, tap NRST, release BOOT0 (LED should stop blinking), then:"
-  @echo "  just flash"
+    @echo "Hold BOOT0, tap NRST, release BOOT0 (LED should stop blinking), then:"
+    @echo "  just flash"
 
 # Flash via USB DFU bootloader (put chip in DFU mode first: hold BOOT0, tap NRST, release BOOT0)
 dfu: build
-  cargo objcopy -p {{pkg}} --target {{target}} --release -- -O binary {{bin}}.bin
-  dfu-util -a 0 -s 0x08000000:leave -D {{bin}}.bin -d 0483:df11
+    cargo objcopy -p {{ pkg }} --target {{ target }} --release -- -O binary {{ bin }}.bin
+    dfu-util -a 0 -s 0x08000000:leave -D {{ bin }}.bin -d 0483:df11
 
 probes:
-  probe-rs list
+    probe-rs list
 
 build:
-  cargo build -p {{pkg}} --target {{target}} --release
+    cargo build -p {{ pkg }} --target {{ target }} --release
 
 clean:
-  cargo clean
+    cargo clean
 
-test-types: 
-  cargo test -p ort_types --features specta,serde -- --no-capture
-
+test-types:
+    cargo test -p ort_types -- --no-capture
