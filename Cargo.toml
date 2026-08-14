@@ -35,14 +35,14 @@ libm = "0.2.11"
 # `default-features = false` keeps serde no_std-compatible; the desktop crate
 # turns `std` back on via its own dependency on serde.
 serde = { version = "1", default-features = false, features = ["derive"] }
-serde_bytes = "0.11.19"
 serde_json = "1.0.151"
 # specta-typescript 0.0.12 pins `specta =2.0.0-rc.25`, so the two have to move
 # together — mixing in specta 1.x silently compiles both and the `Type` derive
 # from one line won't satisfy the exporter from the other.
-specta = { version = "=2.0.0-rc.25", default-features = false, features = [
-  "derive",
-] }
+#
+# `std` carries the `Type` impl for `String` (mapped to `str`), which the DTOs
+# need. Only the desktop crate depends on specta, so the firmware pays nothing.
+specta = { version = "=2.0.0-rc.25", features = ["derive", "std"] }
 specta-typescript = "0.0.12"
 
 # Firmware ships with symbols: probe-rs and defmt decode addresses against
