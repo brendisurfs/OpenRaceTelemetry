@@ -1,4 +1,4 @@
-//! IMU sample types, shared between the firmware and the desktop app.
+//! IMU ample types, shared between the firmware and the desktop app.
 //!
 //! These are raw register units as they come off the MPU6050. Converting them
 //! to physical units is the firmware's job — see `firmware/src/imu_math.rs`.
@@ -28,6 +28,18 @@ impl ImuData {
     /// Register order is accel X/Y/Z, temperature, then gyro X/Y/Z — two bytes
     /// each, high byte first.
     pub fn from_bytes(buf: &[u8; READ_BUF_SIZE]) -> Self {
-        todo!()
+        ImuData {
+            accel_x: combine_bytes(buf[0], buf[1]),
+            accel_y: combine_bytes(buf[2], buf[3]),
+            accel_z: combine_bytes(buf[4], buf[5]),
+            temp_raw: combine_bytes(buf[6], buf[7]),
+            gyro_x: combine_bytes(buf[8], buf[9]),
+            gyro_y: combine_bytes(buf[10], buf[11]),
+            gyro_z: combine_bytes(buf[12], buf[13]),
+        }
     }
+}
+
+fn combine_bytes(high: u8, low: u8) -> i16 {
+    (high << 8 | low) as i16
 }
