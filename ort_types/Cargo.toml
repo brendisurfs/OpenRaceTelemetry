@@ -1,0 +1,24 @@
+[package]
+name = "ort_types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+defmt = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+# specta is std-only (it pulls once_cell/std, serde_json, thiserror), so it can
+# never build for thumbv7em. It stays optional and off by default — only the
+# desktop side turns it on.
+specta = { workspace = true, optional = true }
+
+[features]
+default = []
+# Derives `defmt::Format` on the shared types, for firmware logging over RTT.
+defmt = ["dep:defmt"]
+# Derives `Serialize`/`Deserialize`, so the desktop app can hand these types
+# to the Tauri frontend as JSON.
+serde = ["dep:serde"]
+# Derives `specta::Type`, so the desktop build can emit TypeScript definitions
+# for the frontend. Implies `serde`: the generated TS describes the JSON shape
+# that serde produces, so the two must agree.
+specta = ["dep:specta", "serde"]
