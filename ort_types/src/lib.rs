@@ -7,12 +7,15 @@
 //! Two optional features control the derives, so neither consumer pays for
 //! the other's: `defmt` (firmware, RTT logging) and `serde` (desktop, JSON
 //! across the Tauri boundary).
+//!
+//! TypeScript codegen deliberately lives outside this crate: specta is
+//! std-only, and the frontend wants strings where the wire format wants bytes.
+//! Both concerns are handled by the DTOs in `desktop/src-tauri/src/dto.rs`.
 
-#![cfg_attr(not(feature = "specta"), no_std)]
+#![cfg_attr(not(test), no_std)]
 
 pub mod gps;
 pub mod imu;
-mod parse_utils;
 
 pub use gps::{NMEA_MAX_LEN, NmeaMessage};
 pub use imu::{ImuData, READ_BUF_SIZE};

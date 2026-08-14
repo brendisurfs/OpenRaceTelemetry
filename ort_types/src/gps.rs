@@ -9,17 +9,14 @@ pub const NMEA_MAX_LEN: usize = 82;
 /// For example `"$GPGGA,..."` has talker `"GP"` and message type `"GGA"`.
 /// The C++ version used NUL-terminated `char` buffers; fixed-size byte
 /// arrays carry the same data without needing the terminator.
+/// These are raw bytes, not strings. This is the wire and event-log shape, so
+/// it stays `Copy` and allocation-free. The frontend-facing string form lives
+/// in `desktop/src-tauri/src/dto.rs`, converted once at the IPC boundary.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NmeaMessage {
-    #[cfg_attr(feature= "specta", specta(type = str))]
-    #[cfg_attr(feature = "serde", serde(with = "serde_bytes"))]
     pub talker: [u8; 2],
-
-    #[cfg_attr(feature= "specta", specta(type = str))]
-    #[cfg_attr(feature = "serde", serde(with = "serde_bytes"))]
     pub message_type: [u8; 3],
 }
 
@@ -27,7 +24,7 @@ impl NmeaMessage {
     /// Parses the talker and message type off the front of an NMEA sentence.
     ///
     /// Returns `None` when the sentence is too short to hold a prefix (under 6
-    /// bytes) or doesn't start with `$` — the C++ version signalled this with a
+    /// bytes) or doesn't start with `$`. The C++ version signalled this with a
     /// `valid` flag, which `Option` expresses directly.
     ///
     /// Layout: `$` at index 0, talker at 1..3, message type at 3..6.
