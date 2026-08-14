@@ -43,3 +43,6 @@ impl ImuData {
 fn combine_bytes(high: u8, low: u8) -> i16 {
     (high << 8 | low) as i16
 }
+
+#[cfg(test)]
+mod tests {}
