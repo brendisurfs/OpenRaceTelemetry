@@ -19,6 +19,8 @@ embassy-executor = { workspace = true }
 embassy-stm32 = { workspace = true }
 embassy-time = { workspace = true }
 panic-probe = { workspace = true }
+libm = { workspace = true }
+ort_types = { path = "../ort_types", features = ["defmt"] }
 
 [package.metadata.embassy]
 build = [
