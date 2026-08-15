@@ -5,6 +5,8 @@
 //! pull-ups, this expects external 4.7k pull-ups to 3V3 on both lines —
 //! `embassy-stm32` configures I2C pins as open-drain without them.
 
+mod math;
+
 use defmt::{info, warn};
 use embassy_stm32::i2c::{self, I2c};
 use embassy_stm32::mode::Async;
