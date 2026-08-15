@@ -1,6 +1,9 @@
 mod dto;
 
 use dto::{ImuDataDto, NmeaMessageDto};
+use serde::Serialize;
+use specta::Type;
+use tauri::{ipc::Channel, AppHandle, Emitter};
 use tauri_specta::{collect_commands, Builder};
 
 #[tauri::command]
@@ -12,7 +15,7 @@ fn greet(name: &str) -> String {
 /// Parses an NMEA sentence and hands the frontend the string-shaped DTO.
 #[tauri::command]
 #[specta::specta]
-fn parse_nmea(sentence: &str) -> Option<NmeaMessageDto> {
+fn __parse_nmea(sentence: &str) -> Option<NmeaMessageDto> {
     ort_types::NmeaMessage::from_bytes(sentence.as_bytes()).map(Into::into)
 }
 
@@ -28,9 +31,46 @@ fn imu_sample(buf: Vec<u8>) -> Option<ImuDataDto> {
     Some(ort_types::ImuData::from_bytes(&buf).into())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    tag = "event",
+    content = "data"
+)]
+pub enum ReadEvent<'a> {
+    UsbFound { path: &'a str },
+    Started,
+    Progress { progress: i32 },
+    Finished,
+}
+/// A placeholder event example to eventually read data off of a component.
+#[tauri::command]
+#[specta::specta]
+fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
+    on_event
+        .send(ReadEvent::Started)
+        .expect("read event to send");
+
+    for progress in [1, 15, 25, 50, 75, 100] {
+        on_event
+            .send(ReadEvent::Progress { progress })
+            .expect("failed to send progress");
+    }
+
+    on_event
+        .send(ReadEvent::Finished)
+        .expect("failed to send finished");
+}
+
 /// Commands and types exported to TypeScript.
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![greet, parse_nmea, imu_sample])
+    Builder::<tauri::Wry>::new().commands(collect_commands![
+        greet,
+        read_data,
+        imu_sample,
+        __parse_nmea
+    ])
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -57,6 +97,9 @@ mod tests {
     #[test]
     fn export_typescript_bindings() {
         specta_builder()
+            .typ::<ReadEvent>()
+            .typ::<ImuDataDto>()
+            .typ::<NmeaMessageDto>()
             .export(Typescript::default(), "../src/bindings.ts")
             .expect("failed to export typescript bindings");
     }
