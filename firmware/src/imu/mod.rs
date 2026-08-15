@@ -11,7 +11,8 @@ use defmt::{info, warn};
 use embassy_stm32::gpio::Output;
 use embassy_stm32::i2c::{self, I2c, Master};
 use embassy_stm32::mode::Async;
-use embassy_time::Duration;
+use embassy_stm32::sdmmc::Error::Timeout;
+use embassy_time::{Duration, Timer, WithTimeout, with_timeout};
 
 use crate::imu::math::{calculate_pitch, calculate_roll, convert_temp};
 
@@ -43,15 +44,25 @@ impl<'d> Imu<'d> {
 
     /// Wakes the device and configures the accel and gyro ranges.
     pub async fn setup(&mut self) -> Result<(), i2c::Error> {
+        defmt::trace!("Waking IMU");
         self.wake().await?;
+
+        defmt::trace!("Configuring Gyro");
         self.configure_gyro().await?;
+
+        defmt::trace!("Configuring Accel Range");
         self.configure_accel_range().await
     }
 
     /// Clears the sleep bit in PWR_MGMT_1 by writing 0x00 — the MPU6050 boots
     /// asleep and NAKs data reads until this lands.
     async fn wake(&mut self) -> Result<(), i2c::Error> {
-        self.write_register(PWR_MGMT_REG, 0x00).await
+        let fut = async { self.write_register(PWR_MGMT_REG, 0x00).await };
+
+        defmt::trace!("Setting IMU wake timeout");
+        with_timeout(Duration::from_millis(10), fut)
+            .await
+            .expect("failed to handle wake timeout")
     }
 
     /// Configures the gyroscope range to the +/- 250 deg/s default (0x00).
