@@ -74,9 +74,6 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
 
     let mut gps = Gps::new(uart);
 
-    let mut buf = [0u8; 82];
-    gps.read_sentence(&mut buf);
-
     loop {
         blink::gps_warmup_blink(&mut led);
     }
