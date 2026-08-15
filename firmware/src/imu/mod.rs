@@ -11,7 +11,6 @@ use defmt::{info, warn};
 use embassy_stm32::gpio::Output;
 use embassy_stm32::i2c::{self, I2c, Master};
 use embassy_stm32::mode::Async;
-use embassy_stm32::sdmmc::Error::Timeout;
 use embassy_time::{Duration, Timer, WithTimeout, with_timeout};
 
 use crate::imu::math::{calculate_pitch, calculate_roll, convert_temp};
