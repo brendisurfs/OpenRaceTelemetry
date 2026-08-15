@@ -106,3 +106,9 @@ pub fn log_raw_imu_data(data: &ImuData) {
 pub async fn imu_task(mut imu: Imu<'static>) -> ! {
     todo!()
 }
+
+#[cfg(test)]
+mod imu_tests {
+    #[test]
+    fn does_log() {}
+}
