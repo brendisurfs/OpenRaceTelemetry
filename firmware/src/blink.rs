@@ -4,7 +4,10 @@
 //! active-low: driving the pin low sinks current through the LED and turns it
 //! on. [`Led`] hides that inversion so callers can talk in terms of on/off.
 
-use embassy_stm32::gpio::{Output, Pin};
+use embassy_stm32::{
+    Peri,
+    gpio::{AnyPin, Level, Output, Pin, Speed},
+};
 use embassy_time::{Duration, Timer};
 
 /// Blink cadence for the different states of the system.
@@ -29,29 +32,28 @@ pub struct Led<'d> {
 
 impl<'d> Led<'d> {
     /// Configures `pin` as a push-pull output with the LED initially off.
-    ///
-    /// Active-low, so the initial [`Level`](embassy_stm32::gpio::Level) is the
-    /// opposite of what "off" intuitively suggests.
-    pub fn new(pin: impl Pin + 'd) -> Self {
-        todo!()
+    pub fn new(pin: Peri<'static, impl Pin>) -> Self {
+        Self {
+            output: Output::new(pin, Level::Low, Speed::Low),
+        }
     }
 
     /// Active-low: this drives the pin *low*.
     pub fn on(&mut self) {
-        todo!()
+        self.output.set_high();
     }
 
     /// Active-low: this drives the pin *high*.
     pub fn off(&mut self) {
-        todo!()
+        self.output.set_low();
     }
 
     pub fn toggle(&mut self) {
-        todo!()
+        self.output.toggle();
     }
 
     pub fn is_on(&self) -> bool {
-        todo!()
+        self.output.is_set_high()
     }
 }
 
