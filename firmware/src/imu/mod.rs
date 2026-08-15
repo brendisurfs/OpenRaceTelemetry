@@ -4,10 +4,11 @@
 //! Unlike the ESP32 build, which fell back to the MCU's weak internal
 //! pull-ups, this expects external 4.7k pull-ups to 3V3 on both lines —
 //! `embassy-stm32` configures I2C pins as open-drain without them.
-
+//! For register reference: https://cdn.sparkfun.com/datasheets/Sensors/Accelerometers/RM-MPU-6000A.pdf
 mod math;
 
 use defmt::{info, warn};
+use embassy_stm32::gpio::Output;
 use embassy_stm32::i2c::{self, I2c, Master};
 use embassy_stm32::mode::Async;
 use embassy_time::Duration;
@@ -37,34 +38,36 @@ pub struct Imu<'d> {
 impl<'d> Imu<'d> {
     /// Wraps an already-configured I2C bus. Call [`Imu::setup`] before reading.
     pub fn new(i2c: I2c<'d, Async, Master>) -> Self {
-        todo!()
+        Self { i2c }
     }
 
     /// Wakes the device and configures the accel and gyro ranges.
     pub async fn setup(&mut self) -> Result<(), i2c::Error> {
-        todo!()
+        self.wake().await?;
+        self.configure_gyro().await?;
+        self.configure_accel_range().await
     }
 
     /// Clears the sleep bit in PWR_MGMT_1 by writing 0x00 — the MPU6050 boots
     /// asleep and NAKs data reads until this lands.
     async fn wake(&mut self) -> Result<(), i2c::Error> {
-        todo!()
+        self.write_register(PWR_MGMT_REG, 0x00).await
     }
 
     /// Configures the gyroscope range to the +/- 250 deg/s default (0x00).
     async fn configure_gyro(&mut self) -> Result<(), i2c::Error> {
-        todo!()
+        self.write_register(GYRO_CONFIG, 0x00).await
     }
 
     /// Configures the accelerometer range to the +/- 2g default (0x00), which
     /// is the range `ACCEL_SCALE_2G` in [`crate::imu::math`] assumes.
     async fn configure_accel_range(&mut self) -> Result<(), i2c::Error> {
-        todo!()
+        self.write_register(ACCEL_CONFIG, 0x00).await
     }
 
     /// Writes one config byte: a single transaction of `[register, value]`.
     async fn write_register(&mut self, register: u8, value: u8) -> Result<(), i2c::Error> {
-        todo!()
+        self.i2c.write(register, &[value]).await
     }
 
     /// Burst-reads accel, temperature, and gyro in a single transaction.
@@ -73,8 +76,13 @@ impl<'d> Imu<'d> {
     /// `endTransmission(false)` + `requestFrom`: it writes the start register,
     /// then issues a repeated START and clocks out [`READ_BUF_SIZE`] bytes
     /// without releasing the bus.
-    pub async fn read(&mut self) -> Result<ImuData, i2c::Error> {
-        todo!()
+    pub async fn read_raw_data(&mut self) -> Result<ImuData, i2c::Error> {
+        let mut read_buf = [0u8; READ_BUF_SIZE];
+        self.i2c
+            .write_read(address, &[ACCEL_OUT_H], &mut read_buf)
+            .await?;
+
+        Ok(ImuData::from_bytes(&read_buf))
     }
 }
 
@@ -110,5 +118,5 @@ pub async fn imu_task(mut imu: Imu<'static>) -> ! {
 #[cfg(test)]
 mod imu_tests {
     #[test]
-    fn does_log() {}
+    fn does_read() {}
 }
