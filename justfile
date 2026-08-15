@@ -49,3 +49,6 @@ clean:
 
 test-types:
     cargo test -p ort_types -- --no-capture
+
+coverage:
+    cargo llvm-cov
