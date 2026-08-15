@@ -57,4 +57,43 @@ mod tests {
         assert_eq!("GP", talker_str);
         assert_eq!("GGA", msg_type_str);
     }
+
+    #[test]
+    fn test_parses_different_talker_and_message_type() {
+        let sentence = "$GNRMC,123519,A,4807.038,N,01131.000,E*12";
+
+        let actual = NmeaMessage::from_bytes(sentence.as_bytes()).expect("nmea message to parse");
+        let talker_str = String::from_utf8_lossy(&actual.talker);
+        let msg_type_str = String::from_utf8_lossy(&actual.message_type);
+
+        assert_eq!("GN", talker_str);
+        assert_eq!("RMC", msg_type_str);
+    }
+
+    #[test]
+    fn test_rejects_message_missing_dollar_prefix() {
+        let sentence = "GPGGA,123519,4807.038,N,01131.000,E*6A";
+
+        let actual = NmeaMessage::from_bytes(sentence.as_bytes());
+
+        assert_eq!(None, actual);
+    }
+
+    #[test]
+    fn test_rejects_message_too_short_to_contain_a_type() {
+        let sentence = "$GPG";
+
+        let actual = NmeaMessage::from_bytes(sentence.as_bytes());
+
+        assert_eq!(None, actual);
+    }
+
+    #[test]
+    fn test_rejects_empty_message() {
+        let sentence = "";
+
+        let actual = NmeaMessage::from_bytes(sentence.as_bytes());
+
+        assert_eq!(None, actual);
+    }
 }

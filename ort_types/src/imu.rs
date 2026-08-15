@@ -49,4 +49,19 @@ fn combine_bytes(high: u8, low: u8) -> i16 {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use crate::imu::combine_bytes;
+
+    #[test]
+    fn it_parses_from_bytes() {}
+
+    #[test]
+    fn bytes_should_combine() {
+        let high = 0x01;
+        let low = 0xF4;
+        let expected = 500_i16;
+
+        let output = combine_bytes(high, low);
+        assert_eq!(expected, output);
+    }
+}
