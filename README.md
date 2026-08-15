@@ -1,4 +1,5 @@
-<img width="630" height="416" alt="ORT" src="https://github.com/user-attachments/assets/defb4f95-7287-4f2c-96f7-45d377716fa9" />
+<img width="1280" height="320" alt="OrtGithubImage" src="https://github.com/user-attachments/assets/187a4ebe-e4b7-43f4-907a-d34e5ed48dbb" />
+
 
 # Open Race Telemetry
 Open Race Telemetry is an open-source telemetry system for motorcycle racers.
