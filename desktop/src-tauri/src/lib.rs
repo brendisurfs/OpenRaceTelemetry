@@ -12,25 +12,6 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-/// Parses an NMEA sentence and hands the frontend the string-shaped DTO.
-#[tauri::command]
-#[specta::specta]
-fn __parse_nmea(sentence: &str) -> Option<NmeaMessageDto> {
-    ort_types::NmeaMessage::from_bytes(sentence.as_bytes()).map(Into::into)
-}
-
-/// Decodes one raw MPU6050 burst read for display.
-///
-/// NOTE: Placeholder wiring. The real source is the ingest path.
-/// It exists now so `ImuDataDto` is reachable from the exporter,
-/// a type only reaches `bindings.ts` if a command mentions it.
-#[tauri::command]
-#[specta::specta]
-fn imu_sample(buf: Vec<u8>) -> Option<ImuDataDto> {
-    let buf: [u8; ort_types::READ_BUF_SIZE] = buf.try_into().ok()?;
-    Some(ort_types::ImuData::from_bytes(&buf).into())
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(
     rename_all = "camelCase",
@@ -65,12 +46,7 @@ fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
 
 /// Commands and types exported to TypeScript.
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![
-        greet,
-        read_data,
-        imu_sample,
-        __parse_nmea
-    ])
+    Builder::<tauri::Wry>::new().commands(collect_commands![greet, read_data])
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
