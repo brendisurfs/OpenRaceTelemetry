@@ -7,84 +7,242 @@ for a fraction of the price of commercial systems.
 
 ### Status
 
-🚧 In Progress — this project is under active development and not yet ready for use.
+🚧 In Progress. This project is under active development and is not ready for use.
+
+The project moved from C++ and PlatformIO on an ESP32 to Rust and Embassy on an
+STM32F411CE. The shared types and the desktop app build and pass their tests.
+The firmware does not compile yet. See [Current State](#current-state) for the
+detail.
 
 ### Overview
 
-Telemetry in racing is incredibly important for a variety of reasons within racing.
-It allows you to map out your racing lines, speed in corners, and where you can push further.
-These all result in improving lap times.
+Telemetry in racing is important for many reasons. It lets you map your racing
+lines, your speed in corners, and the places where you can push harder. These
+all help you to improve lap times.
 
-I wanted to build something that I would ultimately like to use.
-I didn't want to buy a system that didn't allow me to customize, extend, and adapt for my needs.
-I enjoy building out things, I enjoy exploring the inner workings of things.
+I wanted to build something that I would use. I did not want to buy a system
+that I cannot customize, extend, and adapt for my needs. I like to build things,
+and I like to explore how things work inside.
 
-This project holds the software components for the Open Race Telemetry project.
-The software includes components for the ESP32, IMU, and other components added to the module.
+This repository holds the software for the Open Race Telemetry project. The
+software reads an IMU and a GPS receiver on the microcontroller, and shows the
+telemetry in a desktop application.
 
 ### Project Structure
 
-[TODO]
+The repository is a Cargo workspace with three crates.
 
-### How To Use This Project
+| Path | Crate | Purpose |
+| --- | --- | --- |
+| `ort_types/` | `ort_types` | Data types shared by the firmware and the desktop app. `no_std`, with no hardware access and no sensor math. |
+| `firmware/` | `firmware` | Embassy firmware for the STM32F411CE. Builds for the `thumbv7em-none-eabi` target and produces the `ort_firmware` binary. |
+| `desktop/` | `desktop` | Tauri 2 desktop application. Rust backend in `desktop/src-tauri/`, React and TypeScript frontend in `desktop/src/`. |
 
-[TODO]
+The firmware and the desktop app build for different targets, so they cannot
+build together. A bare `cargo build` builds only `ort_types`, because the
+workspace sets `default-members` to that crate.
+
+#### Shared types
+
+`ort_types` holds the data that crosses the boundary between the device and the
+desktop app.
+
+- `ImuData` is one sample set from the MPU6050, in raw register units.
+  `ImuData::from_bytes` decodes the 14-byte burst read.
+- `NmeaMessage` is the talker and message type from an NMEA sentence. For
+  example, `$GPGGA,...` gives the talker `GP` and the message type `GGA`.
+  `NmeaMessage::from_bytes` parses the prefix.
+
+Two optional features control the derives, so that neither consumer pays for the
+other. The `defmt` feature is for the firmware and its RTT logging. The `serde`
+feature is for the desktop app and its JSON.
+
+The crate keeps fixed-size ASCII fields as byte arrays. This shape is correct
+for the wire format and the event log, and it keeps the types `Copy` and free of
+allocation.
+
+#### Desktop data flow
+
+The Rust backend gives the frontend a different shape than the wire format. The
+data transfer objects (DTOs) in `desktop/src-tauri/src/dto.rs` convert the byte
+arrays to strings one time, at the IPC boundary. This keeps `ort_types` `no_std`
+and free of codegen concerns, and it makes sure that the generated TypeScript
+describes the JSON that the backend really sends.
+
+- `NmeaMessageDto` converts the ASCII byte arrays to `String`. A corrupt frame
+  becomes U+FFFD instead of a failed IPC call.
+- `ImuDataDto` keeps the `i16` register values and gives the frontend camelCase
+  field names.
+
+`specta` and `tauri-specta` generate `desktop/src/bindings.ts` from the Tauri
+commands. The generation runs as a test, and not at application start. A test
+makes CI fail on a stale checked-in file. If the generation ran at start, the
+application could ship bindings that disagree with the Rust commands.
+
+A type gets into `bindings.ts` only if a command mentions it. The `imu_sample`
+command exists now for this reason, and it is placeholder wiring.
+
+### Current State
+
+Use this section to know what works before you build.
+
+**Works and is tested**
+
+- `ort_types` builds and its tests pass. `NmeaMessage::from_bytes` and
+  `ImuData::from_bytes` are complete.
+- The desktop backend builds and its 4 tests pass. The DTO conversions are
+  complete, and `desktop/src/bindings.ts` agrees with the Rust commands.
+- `firmware/src/imu_math.rs` is complete. It holds the math that converts raw
+  register values to physical units, and it has no hardware access.
+
+**Does not work**
+
+- The firmware does not compile. `cargo build -p firmware` gives 8 errors.
+  - `firmware/src/imu.rs` uses `I2c<'d, Async>`, but `I2c` in
+    `embassy-stm32` 0.6.0 takes two generic parameters, `M: Mode` and
+    `IM: MasterMode`.
+  - `firmware/src/main.rs` gives `peri.PC13` to `Led::new`, which asks for
+    `impl Pin`. Version 0.6.0 wraps the peripheral in `Peri<'_, PC13>`, and that
+    wrapper does not implement `Pin`.
+  - The `bind_interrupts!` block in `firmware/src/main.rs` does not bind the DMA
+    stream interrupts that `I2c::new` and `Uart::new` ask for. The missing
+    bindings are `DMA1_STREAM6`, `DMA1_STREAM0`, `DMA2_STREAM7`, and
+    `DMA2_STREAM2`.
+- The driver bodies in `firmware/src/blink.rs`, `firmware/src/gps.rs`, and
+  `firmware/src/imu.rs` are `todo!()`. The doc comments on those functions state
+  the intended behavior and are the specification for the work.
+- The frontend in `desktop/src/App.tsx` is the default Tauri and React template.
+  It does not call `parse_nmea` or `imu_sample` yet.
 
 ### Running
 
 #### Requirements
 
-- [PlatformIO Core](https://docs.platformio.org/en/latest/core/installation/index.html) (the `pio` CLI)
-- [`just`](https://github.com/casey/just) — command runner used to drive builds/uploads/tests
+- [Rust](https://rustup.rs/) with the 2024 edition toolchain.
+- The bare-metal target for the firmware:
+
+  ```bash
+  rustup target add thumbv7em-none-eabi
+  ```
+
+- [`just`](https://github.com/casey/just), the command runner for the build,
+  flash, and test recipes.
   - macOS: `brew install just`
-  - Linux: `cargo install just`, or see the [packaging status table](https://github.com/casey/just#packages) for your distro's package manager
+  - Linux: `cargo install just`, or see the [packaging status table](https://github.com/casey/just#packages) for the package manager of your distribution.
   - Windows: `winget install --id Casey.Just` or `scoop install just`
-- [clang / clangd](https://clangd.llvm.org/installation) — for editor autocomplete and diagnostics against `compile_commands.json`
-  - macOS: `brew install llvm`
-  - Linux: install the `clangd` package for your distro (e.g. `apt install clangd` on Debian/Ubuntu, `pacman -S clang` on Arch), or use the [LLVM apt repository](https://apt.llvm.org/) for the latest version
-  - Windows: install the [LLVM release](https://github.com/llvm/llvm-project/releases) (includes `clangd`), or `winget install LLVM.LLVM`
-- An Arduino Nano ESP32 (or update `platformio.ini` to match your board)
-- A USB cable to connect the board to your computer
+- [`probe-rs`](https://probe.rs/docs/getting-started/installation/) to flash the
+  board and to read the defmt logs over RTT.
 
-#### Uploading
+  ```bash
+  cargo install probe-rs-tools
+  ```
 
-1. Connect the board to your computer via USB.
-2. Put the board into bootloader mode. On the Arduino Nano ESP32, double-press the reset button — the onboard LED will pulse, indicating it's ready to receive firmware.
-3. Update `upload_port` in `platformio.ini` to match the port your board enumerates as (find it with `pio device list`).
-4. Build, upload, and monitor serial output in one step:
+- An STM32F411CE board (the "Black Pill") and an ST-Link probe.
+- [Bun](https://bun.sh/) for the desktop frontend. The repository holds a
+  `bun.lock` file.
+- The [Tauri system dependencies](https://tauri.app/start/prerequisites/) for
+  your operating system.
 
-   ```bash
-   just upload-and-monitor
-   ```
+#### Hardware
 
-   See the `justfile` for individual `build`, `upload`, `test-native`, and `test-esp32` recipes.
+| Signal | Pin | Notes |
+| --- | --- | --- |
+| Status LED | PC13 | On the board. Active-low, so a low level turns the LED on. |
+| IMU (I2C1) | PB6 = SCL, PB7 = SDA | MPU6050 at address 0x68 with AD0 low, or 0x69 with AD0 high. |
+| GPS (USART1) | PA9 = TX, PA10 = RX | TX goes from the MCU to the GPS. RX comes from the GPS to the MCU. Default rate is 9600 baud. |
+
+The I2C lines need external 4.7k pull-up resistors to 3V3. `embassy-stm32`
+configures the I2C pins as open-drain and does not supply pull-ups. The earlier
+ESP32 build used the weak internal pull-ups of that MCU, so this is a change
+from the previous hardware.
+
+#### Firmware
+
+The firmware does not compile yet, so these recipes fail today. See
+[Current State](#current-state).
+
+```bash
+just build     # cargo build -p firmware --target thumbv7em-none-eabi --release
+just run       # build, flash, and stream the defmt logs over RTT
+just flash     # build, flash, reset, and detach
+just reset     # reset the target without a new flash
+just probes    # list the connected probes
+```
+
+`just run` is the default recipe.
+
+The release profile keeps debug symbols. `probe-rs` and `defmt` decode addresses
+against the symbols, and the symbols stay in the ELF file and are not part of
+the flashed image.
+
+The `justfile` does not use `--connect-under-reset`. That option needs the NRST
+line between the ST-Link and the board. With the usual four-wire connection of
+SWDIO, SWCLK, GND, and 3V3, the option waits for a reset line that is not
+present, and then it times out.
+
+If a flash or an attach operation fails, the target is usually in WFI and
+ignores SWD. Put the chip into the ROM bootloader to stop your firmware, and
+then flash it again:
+
+1. Hold BOOT0.
+2. Tap NRST.
+3. Release BOOT0. The LED stops to blink.
+4. Run `just flash`.
+
+`just unbrick` prints these steps.
+
+To flash across USB with DFU instead of an ST-Link, put the chip into DFU mode
+with the same three button steps, and then run `just dfu`. This recipe needs
+`cargo-binutils` and `dfu-util`.
+
+#### Desktop application
+
+```bash
+cd desktop
+bun install
+bun run tauri dev     # start the application in development mode
+bun run tauri build   # build a bundle with the `dist` profile
+```
+
+Cargo reads `[profile.*]` only in the root of the workspace, so the `dist`
+profile is in the root `Cargo.toml` and not in `desktop/src-tauri/Cargo.toml`.
+
+#### Tests
+
+```bash
+just test-types            # cargo test -p ort_types
+cargo test -p desktop      # DTO conversions and the TypeScript binding export
+```
+
+The desktop test suite writes `desktop/src/bindings.ts`. Run it after you change
+a Tauri command or a DTO, and commit the result.
 
 ### Contributing
 
-Contributions, such as ideas, bug fixes, and features, are always welcome! However, do note that if the feature or idea does not fully align with the goal of this project (a stable, robust open DIY platform for race telemetry) it may not be considered. If you would like to contribute, please look at the open issues, or open an issue.
+Contributions, such as ideas, bug fixes, and features, are always welcome.
+But note that a feature or an idea can be refused if it does not agree with the
+goal of this project, which is a stable, robust, open DIY platform for race
+telemetry. To contribute, look at the open issues, or open an issue.
+
+The firmware errors and the `todo!()` bodies in [Current State](#current-state)
+are a good place to start. Each stub has a doc comment that states the intended
+behavior.
 
 ### Troubleshooting
 
-#### `pio run -t compiledb` fails with "No module named pip.**main**"
+#### `probe-rs` cannot attach to the target
 
-If `pio run -t compiledb` (or any PlatformIO command that installs packages) fails with:
+The target is usually in WFI and ignores SWD. Put the chip into the ROM
+bootloader with the steps in [Firmware](#firmware), and then flash it again.
 
-```
-No module named pip.__main__; 'pip' is a package and cannot be directly executed
-```
+#### `cargo build` builds only `ort_types`
 
-PlatformIO's bundled Python environment is missing a working `pip` install (the `pip` "package" it finds is a broken/namespace stub with no real files). This can happen after a Python version upgrade via Homebrew.
+This is correct. The firmware builds for `thumbv7em-none-eabi` and the desktop
+app builds for the host, so they cannot build together. The workspace sets
+`default-members` to `ort_types`. Give a target with `-p` to build the other
+crates.
 
-Fix it by reinstalling pip into PlatformIO's Python environment with `ensurepip`:
+#### The TypeScript bindings disagree with the Rust commands
 
-```bash
-/opt/homebrew/Cellar/platformio/<version>/libexec/bin/python -m ensurepip --upgrade
-```
-
-Replace `<version>` with your installed PlatformIO version (find it with `ls /opt/homebrew/Cellar/platformio/`). Verify it worked with:
-
-```bash
-/opt/homebrew/Cellar/platformio/<version>/libexec/bin/python -m pip --version
-```
-
-Then re-run `pio run -t compiledb`.
+Run `cargo test -p desktop`. The test regenerates `desktop/src/bindings.ts`.
+Commit the file after the test writes it.
