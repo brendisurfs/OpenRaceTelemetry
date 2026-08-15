@@ -1,6 +1,6 @@
 //! Types shared between the ORT firmware and the desktop app.
 //!
-//! This crate is `no_std` and holds data types only — no hardware access and
+//! This crate is `no_std` and holds data types only, no hardware access and
 //! no sensor math. Drivers live in `firmware/src/`, and the math that turns
 //! these raw samples into physical units lives in `firmware/src/imu_math.rs`.
 //!
