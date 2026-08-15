@@ -8,11 +8,11 @@
 mod math;
 
 use defmt::{info, warn};
-use embassy_stm32::i2c::{self, I2c};
+use embassy_stm32::i2c::{self, I2c, Master};
 use embassy_stm32::mode::Async;
 use embassy_time::Duration;
 
-use crate::imu_math::{calculate_pitch, calculate_roll, convert_temp};
+use crate::imu::math::{calculate_pitch, calculate_roll, convert_temp};
 
 /// `ImuData` is shared with the desktop app; the decoding of a burst read into
 /// one lives alongside it in [`ort_types`].
@@ -31,12 +31,12 @@ const ACCEL_OUT_H: u8 = 0x3B;
 
 /// The MPU6050, bound to an I2C bus.
 pub struct Imu<'d> {
-    i2c: I2c<'d, Async>,
+    i2c: I2c<'d, Async, Master>,
 }
 
 impl<'d> Imu<'d> {
     /// Wraps an already-configured I2C bus. Call [`Imu::setup`] before reading.
-    pub fn new(i2c: I2c<'d, Async>) -> Self {
+    pub fn new(i2c: I2c<'d, Async, Master>) -> Self {
         todo!()
     }
 
@@ -57,7 +57,7 @@ impl<'d> Imu<'d> {
     }
 
     /// Configures the accelerometer range to the +/- 2g default (0x00), which
-    /// is the range `ACCEL_SCALE_2G` in [`crate::imu_math`] assumes.
+    /// is the range `ACCEL_SCALE_2G` in [`crate::imu::math`] assumes.
     async fn configure_accel_range(&mut self) -> Result<(), i2c::Error> {
         todo!()
     }
@@ -83,7 +83,7 @@ impl<'d> Imu<'d> {
 /// Use this to sanity-check wiring before trusting a fixed device address
 /// like 0x68/0x69. A zero-length write ACKs on the address alone, so it
 /// detects a device without touching its registers.
-pub async fn scan_i2c_bus(i2c: &mut I2c<'_, Async>) {
+pub async fn scan_i2c_bus(i2c: &mut I2c<'_, Async, Master>) {
     todo!()
 }
 
