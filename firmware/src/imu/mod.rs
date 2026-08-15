@@ -79,7 +79,7 @@ impl<'d> Imu<'d> {
     pub async fn read_raw_data(&mut self) -> Result<ImuData, i2c::Error> {
         let mut read_buf = [0u8; READ_BUF_SIZE];
         self.i2c
-            .write_read(address, &[ACCEL_OUT_H], &mut read_buf)
+            .write_read(MPU_ADDR, &[ACCEL_OUT_H], &mut read_buf)
             .await?;
 
         Ok(ImuData::from_bytes(&read_buf))
