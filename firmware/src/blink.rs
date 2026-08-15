@@ -32,7 +32,7 @@ pub struct Led<'d> {
 
 impl<'d> Led<'d> {
     /// Configures `pin` as a push-pull output with the LED initially off.
-    pub fn new(pin: Peri<'static, impl Pin>) -> Self {
+    pub fn new(pin: Peri<'static, AnyPin>) -> Self {
         Self {
             output: Output::new(pin, Level::Low, Speed::Low),
         }
@@ -62,7 +62,10 @@ impl<'d> Led<'d> {
 /// One toggle plus one [`FlashDelay::Warmup`] wait per call — the caller drives
 /// this in a loop, so it must `.await` rather than block.
 pub async fn gps_warmup_blink(led: &mut Led<'_>) {
-    todo!()
+    led.on();
+    Timer::after_millis(400).await;
+    led.off();
+    Timer::after_millis(200).await;
 }
 
 /// Flashes the LED to signal that the GPS has warmed up and acquired a fix.
