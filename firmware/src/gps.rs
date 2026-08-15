@@ -21,7 +21,7 @@ pub struct Gps<'d> {
 impl<'d> Gps<'d> {
     /// Wraps an already-configured UART.
     pub fn new(uart: Uart<'d, Async>) -> Self {
-        todo!()
+        defmt::todo!()
     }
 
     /// Reads bytes until a full sentence (`$` through the line terminator) has
@@ -34,11 +34,11 @@ impl<'d> Gps<'d> {
         &mut self,
         buf: &'b mut [u8; NMEA_MAX_LEN],
     ) -> Result<&'b [u8], usart::Error> {
-        todo!()
+        defmt::todo!()
     }
 }
 
 /// Initializes GPS resources and waits for the module to start streaming.
 pub async fn setup_gps(gps: &mut Gps<'_>) -> Result<(), usart::Error> {
-    todo!()
+    defmt::todo!()
 }
