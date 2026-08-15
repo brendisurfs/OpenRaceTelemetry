@@ -42,7 +42,7 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
     let peri = embassy_stm32::init(Config::default());
 
     info!("ORT firmware started");
-    let mut led = Led::new(peri.PC13);
+    let mut led = Led::new(peri.PC13.into());
 
     // IMU setup
     let i2c_config = i2c::Config::default();
@@ -55,9 +55,13 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
         Irqs,
         i2c_config,
     );
+
+    info!("setting up imu");
     let mut imu = Imu::new(i2c);
+    // imu.setup().await.expect("failed to set up IMU");
 
     // UART setup
+    info!("configuring uart");
     let mut uart_config = usart::Config::default();
     uart_config.baudrate = gps::GPS_BAUD;
 
@@ -72,9 +76,11 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
     )
     .expect("Uart build");
 
-    let mut gps = Gps::new(uart);
+    info!("Setting up gps");
+    // let mut gps = Gps::new(uart);
 
     loop {
-        blink::gps_warmup_blink(&mut led);
+        info!("Running blink");
+        blink::gps_warmup_blink(&mut led).await;
     }
 }
