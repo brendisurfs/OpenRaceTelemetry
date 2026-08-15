@@ -1,0 +1,16 @@
+[package]
+name = "ort_types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+defmt = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+
+[features]
+default = []
+# Derives `defmt::Format` on the shared types, for firmware logging over RTT.
+defmt = ["dep:defmt"]
+# Derives `Serialize`/`Deserialize`, so the desktop app can move these types
+# across the wire and into the event log.
+serde = ["dep:serde"]

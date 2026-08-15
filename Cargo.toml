@@ -1,0 +1,63 @@
+[workspace]
+members = ["firmware", "ort_types", "desktop/src-tauri"]
+# firmware builds for thumbv7em, desktop for the host — they can't build
+# together, so a bare `cargo build` covers only the shared crate.
+default-members = ["ort_types"]
+resolver = "3"
+
+
+[workspace.dependencies]
+cortex-m-rt = "0.7.5"
+defmt = "1.1.1"
+defmt-rtt = "1.0.0"
+embassy-boot-stm32 = "0.8.0"
+embassy-executor = { version = "0.10.0", features = [
+  "platform-cortex-m",
+  "executor-thread",
+  "defmt",
+] }
+cortex-m = { version = "0.7.6", features = [
+  "inline-asm",
+  "critical-section-single-core",
+] }
+
+
+embassy-stm32 = { version = "0.6.0", features = [
+  "stm32f411ce",
+  "memory-x",
+  "rt",
+  "time-driver-any",
+] }
+
+embassy-time = "0.5.1"
+panic-probe = "1.0.0"
+libm = "0.2.11"
+# `default-features = false` keeps serde no_std-compatible; the desktop crate
+# turns `std` back on via its own dependency on serde.
+serde = { version = "1", default-features = false, features = ["derive"] }
+serde_json = "1.0.151"
+# specta-typescript 0.0.12 pins `specta =2.0.0-rc.25`, so the two have to move
+# together — mixing in specta 1.x silently compiles both and the `Type` derive
+# from one line won't satisfy the exporter from the other.
+#
+# `std` carries the `Type` impl for `String` (mapped to `str`), which the DTOs
+# need. Only the desktop crate depends on specta, so the firmware pays nothing.
+specta = { version = "=2.0.0-rc.25", features = ["derive", "std"] }
+specta-typescript = "0.0.12"
+
+# Firmware ships with symbols: probe-rs and defmt decode addresses against
+# them, and they live in the ELF, not the flashed image.
+[profile.release]
+debug = 2
+
+# Desktop bundles are built with `--profile dist` (see desktop/tauri.conf.json).
+# Cargo only honours [profile.*] in the workspace root, so these settings —
+# formerly in desktop/src-tauri/Cargo.toml — have to live here.
+[profile.dist]
+inherits = "release"
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+debug = 0
