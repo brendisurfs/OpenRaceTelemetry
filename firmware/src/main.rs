@@ -15,7 +15,6 @@ use panic_probe as _;
 mod blink;
 mod gps;
 mod imu;
-mod imu_math;
 
 use blink::Led;
 use gps::Gps;
@@ -67,7 +66,9 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
 
     let mut gps = Gps::new(uart);
 
+    let mut buf = [u8; 82];
     loop {
+        unwrap!(gps.read_sentence(&mut buf));
         blink::gps_warmup_blink(&mut led);
     }
 }
