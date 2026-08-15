@@ -1,3 +1,5 @@
+<img width="1280" height="320" alt="OrtGithubImage" src="https://github.com/user-attachments/assets/187a4ebe-e4b7-43f4-907a-d34e5ed48dbb" />
+
 
 # Open Race Telemetry
 An open-source telemetry system for motorcycle racers,
