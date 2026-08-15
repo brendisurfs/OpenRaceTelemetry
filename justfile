@@ -52,3 +52,6 @@ test-types:
 
 coverage:
     cargo llvm-cov
+
+check-firmware:
+    cargo check -p firmware --target thumbv7em-none-eabi
