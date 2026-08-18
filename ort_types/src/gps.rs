@@ -1,7 +1,9 @@
 //! GPS/NMEA types, shared between the firmware and the desktop app.
 //! NMEA sentences are printable ASCII, at most 86 bytes including the
 //! leading `$` and the trailing CRLF.
-//! Reference for sentence parsing: https://www.nautixia.com/blog/nmea-0183-sentences-explained
+//! References for sentence parsing:
+//! - https://www.nautixia.com/blog/nmea-0183-sentences-explained
+//! - https://aprs.gids.nl/nmea/#rma
 
 pub const MAX_NMEA_LEN: usize = 86;
 
@@ -62,7 +64,7 @@ pub enum LongSign {
 }
 
 pub struct GPGGASentence {
-    pub talker: TalkerIdentifier,
+    pub sentence_identifier: [u8; sizing::SENTENCE_ID],
     /// hhmmss.sss
     pub utc_time: i32,
     pub latitude: f32,
@@ -90,6 +92,7 @@ pub struct GPGGASentence {
 }
 
 mod sizing {
+    pub const SENTENCE_ID: usize = 5;
     pub const TALKER: usize = 2;
     pub const MESSAGE_TYPE: usize = 3;
     pub const UTC_TIME: usize = 9;

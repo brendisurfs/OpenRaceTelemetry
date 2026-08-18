@@ -10,6 +10,26 @@ export const commands = {
 };
 
 /* Types */
+export type GPGGASentenceDto = {
+	talker: string,
+	/**  hhmmss.sss */
+	utcTime: number,
+	latitude: number | null,
+	/**  "N"=1, "S"=-1 */
+	latSign: LatSign,
+	longitude: number | null,
+	/**  E=1, W=-1 */
+	longSign: LongSign,
+	positionFixIndicator: PositionFixIndicator,
+	/**  apprently range is 0 - 12 */
+	satellitesUsed: number,
+	/**  Horizontal Dilution of Precision */
+	hdop: number | null,
+	mslAltitudeMeters: number | null,
+	/**  Meters */
+	units: number,
+};
+
 /**
  *  One IMU sample, in raw register units.
  * 
@@ -27,11 +47,17 @@ export type ImuDataDto = {
 	gyroZ: number,
 };
 
+export type LatSign = "north" | "south";
+
+export type LongSign = "east" | "west";
+
 /**  An NMEA prefix as the frontend sees it — `{ talker: "GP", messageType: "GGA" }`. */
 export type NmeaMessageDto = {
 	talker: string,
 	messageType: string,
 };
+
+export type PositionFixIndicator = "notAvailableOrInvalid" | "gpsSPSModeFixValid" | "differentialGpsFixValid" | "deadReckoningMode";
 
 export type ReadEvent = { event: "usbFound"; data: {
 	path: string,

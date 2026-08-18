@@ -62,5 +62,5 @@ check-firmware:
 build-desktop:
     cargo build -p desktop --release
 
-build-bindings:
-    cargo test -p desktop
+generate-bindings:
+    cargo test -p desktop export_typescript_bindings
