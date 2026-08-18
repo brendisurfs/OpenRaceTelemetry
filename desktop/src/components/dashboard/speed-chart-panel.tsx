@@ -6,6 +6,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { IDockviewPanelProps } from "dockview-react";
 
 export type SpeedSample = {
   time: string;
@@ -36,8 +37,8 @@ interface SpeedChartPanelProps {
   data?: SpeedSample[];
 }
 
-export const SpeedChartPanel: FC<SpeedChartPanelProps> = ({
-  data = PLACEHOLDER_SPEED_DATA,
+export const SpeedChartPanel: FC<IDockviewPanelProps<SpeedChartPanelProps>> = ({
+  params: { data = PLACEHOLDER_SPEED_DATA },
 }) => {
   return (
     <div className="flex h-full flex-col p-2">

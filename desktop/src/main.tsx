@@ -3,12 +3,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { SidebarProvider } from "./components/ui/sidebar";
-import { MySidebar } from "./components/my-sidebar";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <SidebarProvider>
-      <MySidebar />
       <main className="h-full w-full">
         <App />
       </main>

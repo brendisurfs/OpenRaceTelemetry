@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { RiMapPin2Line } from "@remixicon/react";
+import { IDockviewPanelProps } from "dockview-react";
 
 /**
  * Shaped to be trivially derivable from `GPGGASentenceDto` once wired up:
@@ -21,8 +22,8 @@ interface GpsMapPanelProps {
   coordinate?: GpsCoordinate;
 }
 
-export const GpsMapPanel: FC<GpsMapPanelProps> = ({
-  coordinate = PLACEHOLDER_COORDINATE,
+export const GpsMapPanel: FC<IDockviewPanelProps<GpsMapPanelProps>> = ({
+  params: { coordinate = PLACEHOLDER_COORDINATE },
 }) => {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted/30 p-4 text-center">

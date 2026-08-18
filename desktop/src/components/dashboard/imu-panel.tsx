@@ -1,23 +1,14 @@
 import type { FC } from "react";
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-} from "recharts";
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import type { ImuDataDto } from "@/bindings";
+import { IDockviewPanelProps } from "dockview-react";
 
 const PLACEHOLDER_IMU: ImuDataDto = {
   accelX: 120,
@@ -33,8 +24,7 @@ const PLACEHOLDER_IMU: ImuDataDto = {
 function deriveMotionSummary(imu: ImuDataDto) {
   const gForce =
     Math.sqrt(imu.accelX ** 2 + imu.accelY ** 2 + imu.accelZ ** 2) / 16384;
-  const leanAngle =
-    (Math.atan2(imu.accelY, imu.accelZ) * 180) / Math.PI;
+  const leanAngle = (Math.atan2(imu.accelY, imu.accelZ) * 180) / Math.PI;
 
   return { gForce, leanAngle };
 }
@@ -50,7 +40,9 @@ interface ImuPanelProps {
   imu?: ImuDataDto;
 }
 
-export const ImuPanel: FC<ImuPanelProps> = ({ imu = PLACEHOLDER_IMU }) => {
+export const ImuPanel: FC<IDockviewPanelProps<ImuPanelProps>> = ({
+  params: { imu = PLACEHOLDER_IMU },
+}) => {
   const { gForce, leanAngle } = deriveMotionSummary(imu);
 
   const radarData = [
@@ -91,7 +83,10 @@ export const ImuPanel: FC<ImuPanelProps> = ({ imu = PLACEHOLDER_IMU }) => {
           <span>G-Force: {gForce.toFixed(2)}g</span>
           <span>Lean: {leanAngle.toFixed(1)}°</span>
         </div>
-        <ChartContainer config={radarChartConfig} className="mx-auto aspect-square max-h-52">
+        <ChartContainer
+          config={radarChartConfig}
+          className="mx-auto aspect-square max-h-52"
+        >
           <RadarChart data={radarData}>
             <ChartTooltip content={<ChartTooltipContent />} />
             <PolarGrid />

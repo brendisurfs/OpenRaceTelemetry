@@ -1,7 +1,7 @@
 // import "./App.css";
-// import { Channel } from "@tauri-apps/api/core";
 
-import ViewerSquare from "./components/viewer-square";
+import AppWorkspace from "./components/dashboard/app-workspace";
+import EventTimelineSheet from "./components/dashboard/event-timeline-sheet";
 
 // const onEvent = new Channel<ReadEvent>();
 
@@ -19,8 +19,11 @@ function App() {
   // }, [commands]);
 
   return (
-    <main className="flex flex-col">
-      <ViewerSquare />
+    <main className="flex h-screen flex-col">
+      <div className="min-h-0 flex-1">
+        <AppWorkspace />
+      </div>
+      <EventTimelineSheet />
     </main>
   );
 }
