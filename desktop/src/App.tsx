@@ -1,30 +1,27 @@
-import { useEffect, useState } from "react";
-import { commands, ReadEvent } from "./bindings";
+// import "./App.css";
+// import { Channel } from "@tauri-apps/api/core";
+import { window } from "@tauri-apps/api";
 
-import "./App.css";
-import { Channel } from "@tauri-apps/api/core";
+import ViewerSquare from "./components/viewer-square";
 
-const onEvent = new Channel<ReadEvent>();
+// const onEvent = new Channel<ReadEvent>();
 
 function App() {
-  const [prog, setProg] = useState(0);
+  // onEvent.onmessage = (msg) => {
+  //   if (msg.event == "progress") {
+  //     console.log("Progress: ", msg.data);
+  //     setProg(msg.data.progress);
+  //   }
+  //   console.log("Received: ", msg.event);
+  // };
 
-  onEvent.onmessage = (msg) => {
-    if (msg.event == "progress") {
-      console.log("Progress: ", msg.data);
-      setProg(msg.data.progress);
-    }
-    console.log("Received: ", msg.event);
-  };
-
-  useEffect(() => {
-    commands.readData(onEvent);
-  }, [commands]);
+  // useEffect(() => {
+  //   commands.readData(onEvent);
+  // }, [commands]);
 
   return (
-    <main className="container">
-      <h1>Open Race Telemetry</h1>
-      <p>{prog}</p>
+    <main className="flex flex-col">
+      <ViewerSquare />
     </main>
   );
 }

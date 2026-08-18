@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "ort_firmware" # name of the binary produced
+name = "ort_firmware"
 path = "src/main.rs"
-test = false
 bench = false
+test = false
 
 [dependencies]
 cortex-m-rt = { workspace = true }

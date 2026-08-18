@@ -8,10 +8,12 @@ use embassy_stm32::usart::{self, Uart};
 
 /// `NmeaMessage` and its parser are shared with the desktop app, which decodes
 /// the same sentences off recorded logs.
-pub use ort_types::gps::{NMEA_MAX_LEN, NmeaMessage};
+pub use ort_types::gps::{MAX_NMEA_LEN, NmeaMessage};
 
 /// Default baud rate for a stock NMEA module.
 pub const GPS_BAUD: u32 = 9600;
+
+const GPGGA_ID_REPR: &'static [u8; 5] = &[71u8, 80u8, 71u8, 71u8, 65u8];
 
 /// The GPS receiver, bound to a UART.
 pub struct Gps<'d> {
@@ -32,13 +34,26 @@ impl<'d> Gps<'d> {
     /// [`NMEA_MAX_LEN`] rather than overflowing `buf`.
     pub async fn read_sentence<'b>(
         &mut self,
-        buf: &'b mut [u8; NMEA_MAX_LEN],
+        buf: &'b mut [u8; MAX_NMEA_LEN],
     ) -> Result<&'b [u8], usart::Error> {
-        defmt::todo!()
+        let sentence_identifier = &buf[1..5];
+        // if our sentence is not a GPGGA sentence, skip it for now.
+        match sentence_identifier {
+            x if sentence_identifier == GPGGA_ID_REPR => {
+                defmt::todo!("Handle GPGGA sentence");
+            }
+            _ => defmt::todo!("Handle any other sentence"),
+        };
     }
 }
 
 /// Initializes GPS resources and waits for the module to start streaming.
 pub async fn setup_gps(gps: &mut Gps<'_>) -> Result<(), usart::Error> {
     defmt::todo!()
+}
+
+#[cfg(test)]
+mod gps_tests {
+    #[test]
+    fn gps_builds() {}
 }

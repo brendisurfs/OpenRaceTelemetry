@@ -1,9 +1,8 @@
 mod dto;
 
-use dto::{ImuDataDto, NmeaMessageDto};
 use serde::Serialize;
 use specta::Type;
-use tauri::{ipc::Channel, AppHandle, Emitter};
+use tauri::{ipc::Channel, AppHandle};
 use tauri_specta::{collect_commands, Builder};
 
 #[tauri::command]
@@ -62,7 +61,10 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    use crate::dto::GPGGASentenceDto;
+
     use super::*;
+    use dto::{ImuDataDto, NmeaMessageDto};
     use specta_typescript::Typescript;
 
     /// Regenerates `desktop/src/bindings.ts`.
@@ -76,6 +78,7 @@ mod tests {
             .typ::<ReadEvent>()
             .typ::<ImuDataDto>()
             .typ::<NmeaMessageDto>()
+            .typ::<GPGGASentenceDto>()
             .export(Typescript::default(), "../src/bindings.ts")
             .expect("failed to export typescript bindings");
     }

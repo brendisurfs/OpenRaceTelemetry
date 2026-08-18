@@ -44,11 +44,12 @@ probes:
 clean:
     cargo clean
 
+coverage:
+    cargo llvm-cov
+
 test-types:
     cargo test -p ort_types -- --no-capture
 
-coverage:
-    cargo llvm-cov
 
 build-firmware:
     cargo build -p {{ pkg }} --target {{ target }} --release
@@ -61,5 +62,5 @@ check-firmware:
 build-desktop:
     cargo build -p desktop --release
 
-build-bindings:
-    cargo test -p desktop
+generate-bindings:
+    cargo test -p desktop export_typescript_bindings

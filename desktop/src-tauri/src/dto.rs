@@ -11,6 +11,85 @@ use ort_types::{ImuData, NmeaMessage};
 use serde::Serialize;
 use specta::Type;
 
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum TalkerIdentifier {
+    #[default]
+    /// GPS
+    GP,
+    /// GLONASS
+    GL,
+    /// Galileo
+    GA,
+    /// Multi-constellation GNSS
+    GN,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum PositionFixIndicator {
+    #[default]
+    NotAvailableOrInvalid = 0,
+    GpsSPSModeFixValid = 1,
+    DifferentialGpsFixValid = 2,
+    DeadReckoningMode = 6,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum LatSign {
+    #[default]
+    North = 1,
+    South = -1,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub enum LongSign {
+    #[default]
+    East = 1,
+    West = -1,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GPGGASentenceDto {
+    pub talker: String,
+    /// hhmmss.sss
+    pub utc_time: i32,
+    pub latitude: f32,
+
+    /// "N"=1, "S"=-1
+    pub lat_sign: LatSign,
+
+    pub longitude: f32,
+
+    /// E=1, W=-1
+    pub long_sign: LongSign,
+
+    pub position_fix_indicator: PositionFixIndicator,
+
+    /// apprently range is 0 - 12
+    pub satellites_used: u8,
+
+    /// Horizontal Dilution of Precision
+    pub hdop: f32,
+
+    pub msl_altitude_meters: f32,
+
+    /// Meters
+    pub units: u8,
+}
+
+impl From<NmeaMessage> for GPGGASentenceDto {
+    /// NMEA prefixes are printable ASCII by spec, anything else is a corrupt
+    /// frame, so lossy conversion (U+FFFD) is preferable to failing the IPC
+    /// call.
+    fn from(msg: NmeaMessage) -> Self {
+        Self::default()
+    }
+}
+
 /// An NMEA prefix as the frontend sees it — `{ talker: "GP", messageType: "GGA" }`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(rename_all = "camelCase")]
@@ -66,13 +145,17 @@ impl From<ImuData> for ImuDataDto {
 mod tests {
     use super::*;
 
+    const SENTENCE: &[u8; 86] =
+        b"$GPGGA,115739.00,4158.8441367,N,09147.4416929,W,4,13,0.9,255.747,M,-32.00,M,01,0000*6E";
     /// The reason these DTOs exist: the shared type serializes its ASCII
     /// fields as byte arrays, and the frontend expects strings.
     #[test]
     fn nmea_dto_serializes_prefix_fields_as_strings() {
-        let msg = NmeaMessage::from_bytes(b"$GPGGA,123519,4807.038,N").expect("sentence parses");
+        let msg = NmeaMessage::from_bytes(SENTENCE).expect("sentence parses");
+        println!("{msg:#?}");
 
         let json = serde_json::to_string(&NmeaMessageDto::from(msg)).expect("dto serializes");
+        println!("{json}");
 
         assert_eq!(r#"{"talker":"GP","messageType":"GGA"}"#, json);
     }
@@ -83,6 +166,7 @@ mod tests {
         let msg = NmeaMessage {
             talker: [0xFF, 0xFE],
             message_type: *b"GGA",
+            ..Default::default()
         };
 
         let dto = NmeaMessageDto::from(msg);
