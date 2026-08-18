@@ -60,7 +60,7 @@ enum LongSign {
     West = -1,
 }
 
-struct GPGGASentence {
+pub struct GPGGASentence {
     talker: TalkerIdentifier,
     /// hhmmss.sss
     utc_time: i32,
@@ -129,24 +129,12 @@ pub struct NmeaMessage {
     msl_altitude_meters: [u8; sizing::MSL_ALTITUDE_METERS],
     /// Meters
     units: [u8; sizing::UNITS],
+    geoidal_separation: [u8; sizing::GEOIDAL_SEPARATION],
+    /// Meters
+    geoidal_units: [u8; sizing::GEOIDAL_UNITS],
+    age_of_diff: [u8; sizing::AGE_OF_DIFF],
+    checksum: [u8; sizing::CHECKSUM],
 }
-// let expected = [
-//     "$GPGGA",
-//     "115739.00",
-//     "4158.8441367",
-//     "N",
-//     "09147.4416929",
-//     "W",
-//     "4",
-//     "13",
-//     "0.9",
-//     "255.747",
-//     "M",
-//     "-32.00",
-//     "M",
-//     "01",
-//     "0000*6",
-// ]
 
 impl NmeaMessage {
     /// Parses the talker and message type off the front of an NMEA sentence.
@@ -154,8 +142,6 @@ impl NmeaMessage {
     /// Returns `None` when the sentence is too short to hold a prefix (under 6
     /// bytes) or doesn't start with `$`. The C++ version signalled this with a
     /// `valid` flag, which `Option` expresses directly.
-    ///
-    /// Layout: `$` at index 0, talker at 1..3, message type at 3..6.
     pub fn from_bytes(nmea_message: &[u8]) -> Option<NmeaMessage> {
         if nmea_message.len() < 6 || nmea_message[0] != b'$' {
             return None;
@@ -163,11 +149,37 @@ impl NmeaMessage {
 
         let mut cursor = ByteCursor::new(nmea_message);
         let mut msg = NmeaMessage::default();
-        cursor.skip(1); // `$`
+        cursor.skip(1);
         msg.talker = *cursor.take::<{ sizing::TALKER }>();
         msg.message_type = *cursor.take::<{ sizing::MESSAGE_TYPE }>();
-        cursor.skip(1); // `,`
+        cursor.skip(1);
         msg.utc_time = *cursor.take::<{ sizing::UTC_TIME }>();
+        cursor.skip(1);
+        msg.latitude = *cursor.take::<{ sizing::LATITUDE }>();
+        cursor.skip(1);
+        msg.lat_sign = *cursor.take::<{ sizing::LAT_SIGN }>();
+        cursor.skip(1);
+        msg.longitude = *cursor.take::<{ sizing::LONGITUDE }>();
+        cursor.skip(1);
+        msg.long_sign = *cursor.take::<{ sizing::LONG_SIGN }>();
+        cursor.skip(1);
+        msg.position_fix_indicator = *cursor.take::<{ sizing::POSITION_FIX_INDICATOR }>();
+        cursor.skip(1);
+        msg.satellites_used = *cursor.take::<{ sizing::SATELLITES_USED }>();
+        cursor.skip(1);
+        msg.hdop = *cursor.take::<{ sizing::HDOP }>();
+        cursor.skip(1);
+        msg.msl_altitude_meters = *cursor.take::<{ sizing::MSL_ALTITUDE_METERS }>();
+        cursor.skip(1);
+        msg.units = *cursor.take::<{ sizing::UNITS }>();
+        cursor.skip(1);
+        msg.geoidal_separation = *cursor.take::<{ sizing::GEOIDAL_SEPARATION }>();
+        cursor.skip(1);
+        msg.geoidal_units = *cursor.take::<{ sizing::GEOIDAL_UNITS }>();
+        cursor.skip(1);
+        msg.age_of_diff = *cursor.take::<{ sizing::AGE_OF_DIFF }>();
+        cursor.skip(1);
+        msg.checksum = *cursor.take::<{ sizing::CHECKSUM }>();
 
         Some(msg)
     }

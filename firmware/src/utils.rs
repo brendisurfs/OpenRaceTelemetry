@@ -7,7 +7,7 @@ const CHAR_COMMA: u8 = 0x2C;
 
 /// Parses a raw GPGGA NMEA sentence, splitting out each word from raw bytes.
 /// Returns a Vec<Vec<u8>>, representing split words
-fn parse_nmea_sentence(sentence: &[u8; MAX_NMEA_LEN]) -> Vec<Vec<u8>> {
+pub fn decode_nmea_sentence(sentence: &[u8; MAX_NMEA_LEN]) -> Vec<Vec<u8>> {
     let mut i = 0;
     let mut buffer = Vec::<u8>::with_capacity(MAX_ITEM_LEN);
     let mut res = Vec::<Vec<u8>>::with_capacity(MAX_NMEA_LEN);
@@ -40,14 +40,14 @@ mod tests {
     use alloc::borrow::Cow;
     use ort_types::MAX_NMEA_LEN;
 
-    use crate::utils::parse_nmea_sentence;
+    use crate::utils::decode_nmea_sentence;
 
     const SENTENCE: &'static [u8; MAX_NMEA_LEN] =
         b"$GPGGA,115739.00,4158.8441367,N,09147.4416929,W,4,13,0.9,255.747,M,-32.00,M,01,0000*6E";
 
     #[test]
     fn sentence_parses_from_raw_bytes() {
-        let res = parse_nmea_sentence(SENTENCE);
+        let res = decode_nmea_sentence(SENTENCE);
         let expected = [
             "$GPGGA",
             "115739.00",
