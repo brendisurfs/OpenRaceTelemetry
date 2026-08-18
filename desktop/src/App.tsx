@@ -1,6 +1,5 @@
 // import "./App.css";
 // import { Channel } from "@tauri-apps/api/core";
-import { window } from "@tauri-apps/api";
 
 import ViewerSquare from "./components/viewer-square";
 
