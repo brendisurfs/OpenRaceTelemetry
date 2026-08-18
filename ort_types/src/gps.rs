@@ -29,7 +29,7 @@ impl<'a> ByteCursor<'a> {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-enum TalkerIdentifier {
+pub enum TalkerIdentifier {
     /// GPS
     #[default]
     GP,
@@ -44,41 +44,49 @@ enum TalkerIdentifier {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-enum PositionFixIndicator {
+pub enum PositionFixIndicator {
     NotAvailableOrInvalid = 0,
     GpsSPSModeFixValid = 1,
     DifferentialGpsFixValid = 2,
     DeadReckoningMode = 6,
 }
 
-enum LatSign {
+pub enum LatSign {
     North = 1,
     South = -1,
 }
-enum LongSign {
+
+pub enum LongSign {
     East = 1,
     West = -1,
 }
 
 pub struct GPGGASentence {
-    talker: TalkerIdentifier,
+    pub talker: TalkerIdentifier,
     /// hhmmss.sss
-    utc_time: i32,
-    latitude: f32,
-    /// "N"=1, "S"=-1
-    lat_sign: LatSign,
-    longitude: f32,
-    /// E=1, W=-1
-    long_sign: LongSign,
+    pub utc_time: i32,
+    pub latitude: f32,
 
-    position_fix_indicator: PositionFixIndicator,
+    /// "N"=1, "S"=-1
+    pub lat_sign: LatSign,
+
+    pub longitude: f32,
+
+    /// E=1, W=-1
+    pub long_sign: LongSign,
+
+    pub position_fix_indicator: PositionFixIndicator,
+
     /// apprently range is 0 - 12
-    satellites_used: u8,
+    pub satellites_used: u8,
+
     /// Horizontal Dilution of Precision
-    hdop: f32,
-    msl_altitude_meters: f32,
+    pub hdop: f32,
+
+    pub msl_altitude_meters: f32,
+
     /// Meters
-    units: u8,
+    pub units: u8,
 }
 
 mod sizing {
@@ -116,24 +124,24 @@ pub struct NmeaMessage {
     pub message_type: [u8; sizing::MESSAGE_TYPE],
     pub utc_time: [u8; sizing::UTC_TIME],
     pub latitude: [u8; sizing::LATITUDE],
-    lat_sign: [u8; sizing::LAT_SIGN],
-    longitude: [u8; sizing::LONGITUDE],
+    pub lat_sign: [u8; sizing::LAT_SIGN],
+    pub longitude: [u8; sizing::LONGITUDE],
     /// E=1, W=-1
-    long_sign: [u8; sizing::LONG_SIGN],
+    pub long_sign: [u8; sizing::LONG_SIGN],
 
-    position_fix_indicator: [u8; sizing::POSITION_FIX_INDICATOR],
+    pub position_fix_indicator: [u8; sizing::POSITION_FIX_INDICATOR],
     /// apprently range is 0 - 12
-    satellites_used: [u8; sizing::SATELLITES_USED],
+    pub satellites_used: [u8; sizing::SATELLITES_USED],
     /// Horizontal Dilution of Precision
-    hdop: [u8; sizing::HDOP],
-    msl_altitude_meters: [u8; sizing::MSL_ALTITUDE_METERS],
+    pub hdop: [u8; sizing::HDOP],
+    pub msl_altitude_meters: [u8; sizing::MSL_ALTITUDE_METERS],
     /// Meters
-    units: [u8; sizing::UNITS],
-    geoidal_separation: [u8; sizing::GEOIDAL_SEPARATION],
+    pub units: [u8; sizing::UNITS],
+    pub geoidal_separation: [u8; sizing::GEOIDAL_SEPARATION],
     /// Meters
-    geoidal_units: [u8; sizing::GEOIDAL_UNITS],
-    age_of_diff: [u8; sizing::AGE_OF_DIFF],
-    checksum: [u8; sizing::CHECKSUM],
+    pub geoidal_units: [u8; sizing::GEOIDAL_UNITS],
+    pub age_of_diff: [u8; sizing::AGE_OF_DIFF],
+    pub checksum: [u8; sizing::CHECKSUM],
 }
 
 impl NmeaMessage {

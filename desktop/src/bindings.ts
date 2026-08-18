@@ -7,27 +7,6 @@ export const commands = {
 	greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
 	/**  A placeholder event example to eventually read data off of a component. */
 	readData: (onEvent: Channel<ReadEvent>) => __TAURI_INVOKE<void>("read_data", { onEvent }),
-	/**
-	 *  Decodes one raw MPU6050 burst read for display.
-	 * 
-	 *  NOTE: Placeholder wiring. The real source is the ingest path.
-	 *  It exists now so `ImuDataDto` is reachable from the exporter,
-	 *  a type only reaches `bindings.ts` if a command mentions it.
-	 */
-	imuSample: (buf: number[]) => __TAURI_INVOKE<{
-	accelX: number,
-	accelY: number,
-	accelZ: number,
-	tempRaw: number,
-	gyroX: number,
-	gyroY: number,
-	gyroZ: number,
-} | null>("imu_sample", { buf }),
-	/**  Parses an NMEA sentence and hands the frontend the string-shaped DTO. */
-	parseNmea: (sentence: string) => __TAURI_INVOKE<{
-	talker: string,
-	messageType: string,
-} | null>("__parse_nmea", { sentence }),
 };
 
 /* Types */
