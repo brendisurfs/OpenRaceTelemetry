@@ -147,6 +147,7 @@ impl NmeaMessage {
             return None;
         }
 
+        // We skip 1 after every call in order to skip commas.
         let mut cursor = ByteCursor::new(nmea_message);
         let mut msg = NmeaMessage::default();
         cursor.skip(1);

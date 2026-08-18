@@ -1,8 +1,6 @@
 #![no_main]
 #![cfg_attr(not(test), no_std)]
 
-extern crate alloc;
-
 use defmt_rtt as _;
 use panic_probe as _;
 
@@ -24,9 +22,6 @@ use imu::{self, Imu};
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
 
-#[global_allocator]
-static HEAP: Heap = Heap::empty();
-
 // reference: https://www.st.com/resource/en/reference_manual/rm0383-stm32f411xce-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
 bind_interrupts!(struct Irqs {
     I2C1_EV => i2c::EventInterruptHandler<peripherals::I2C1>;
@@ -45,11 +40,6 @@ const HEAP_SIZE: usize = 512;
 
 #[embassy_executor::main]
 async fn main(spawner: embassy_executor::Spawner) -> ! {
-    // SAFETY: We know we need to initialize allocator before we use it anywhere else.
-    unsafe {
-        embedded_alloc::init!(HEAP, HEAP_SIZE);
-    }
-
     let peri = embassy_stm32::init(Config::default());
 
     info!("ORT firmware started");

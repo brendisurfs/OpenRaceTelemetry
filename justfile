@@ -50,8 +50,6 @@ coverage:
 test-types:
     cargo test -p ort_types -- --no-capture
 
-test-firmware-utils: 
-  cargo test -p firmware --lib --no-default-features -- --no-capture
 
 build-firmware:
     cargo build -p {{ pkg }} --target {{ target }} --release

@@ -10,37 +10,17 @@ bench = false
 test = false
 
 [dependencies]
-cortex-m-rt = { workspace = true, optional = true }
-cortex-m = { workspace = true, optional = true }
-embedded-alloc = { workspace = true, optional = true }
+cortex-m-rt = { workspace = true }
+cortex-m = { workspace = true }
 defmt = { workspace = true }
-defmt-rtt = { workspace = true, optional = true }
-embassy-boot-stm32 = { workspace = true, optional = true }
-embassy-executor = { workspace = true, optional = true }
-embassy-stm32 = { workspace = true, optional = true }
-embassy-time = { workspace = true, optional = true }
-panic-probe = { workspace = true, optional = true }
-libm = { workspace = true, optional = true }
-ort_types = { path = "../ort_types", features = ["defmt", "alloc"] }
-
-[features]
-default = ["hardware"]
-# Pulls in the embassy/cortex-m stack. Only the `ort_firmware` bin needs this —
-# the lib target (used for `cargo test -p firmware --lib`) stays free of
-# hardware crates like stm32-metapac, whose `#[link_section]` values are ELF-
-# specific and fail to link on a host (Mach-O/ELF-host) target.
-hardware = [
-  "dep:cortex-m-rt",
-  "dep:cortex-m",
-  "dep:embedded-alloc",
-  "dep:defmt-rtt",
-  "dep:embassy-boot-stm32",
-  "dep:embassy-executor",
-  "dep:embassy-stm32",
-  "dep:embassy-time",
-  "dep:panic-probe",
-  "dep:libm",
-]
+defmt-rtt = { workspace = true }
+embassy-boot-stm32 = { workspace = true }
+embassy-executor = { workspace = true }
+embassy-stm32 = { workspace = true }
+embassy-time = { workspace = true }
+panic-probe = { workspace = true }
+libm = { workspace = true }
+ort_types = { path = "../ort_types", features = ["defmt"] }
 
 [package.metadata.embassy]
 build = [
