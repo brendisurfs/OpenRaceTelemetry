@@ -1,8 +1,64 @@
 //! GPS/NMEA types, shared between the firmware and the desktop app.
+//! NMEA sentences are printable ASCII, at most 86 bytes including the
+//! leading `$` and the trailing CRLF.
+//! Reference for sentence parsing: https://www.nautixia.com/blog/nmea-0183-sentences-explained
 
-/// NMEA sentences are printable ASCII, at most 82 bytes including the
-/// leading `$` and the trailing CRLF.
-pub const NMEA_MAX_LEN: usize = 82;
+pub const MAX_NMEA_LEN: usize = 86;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+enum TalkerIdentifier {
+    /// GPS
+    #[default]
+    GP,
+    /// GLONASS
+    GL,
+    /// Galileo
+    GA,
+    /// Multi-constellation GNSS
+    GN,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+enum PositionFixIndicator {
+    NotAvailableOrInvalid = 0,
+    GpsSPSModeFixValid = 1,
+    DifferentialGpsFixValid = 2,
+    DeadReckoningMode = 6,
+}
+
+enum LatSign {
+    North = 1,
+    South = -1,
+}
+enum LongSign {
+    East = 1,
+    West = -1,
+}
+
+struct GPGGASentence {
+    talker: TalkerIdentifier,
+    /// hhmmss.sss
+    utc_time: i32,
+    latitude: f32,
+    /// "N"=1, "S"=-1
+    lat_sign: LatSign,
+    longitude: f32,
+    /// E=1, W=-1
+    long_sign: LongSign,
+
+    position_fix_indicator: PositionFixIndicator,
+    /// apprently range is 0 - 12
+    satellites_used: u8,
+    /// Horizontal Dilution of Precision
+    hdop: f32,
+    msl_altitude_meters: f32,
+    /// Meters
+    units: u8,
+}
 
 /// Result of parsing an NMEA sentence's talker/message-type prefix.
 ///
@@ -43,14 +99,16 @@ impl NmeaMessage {
 }
 
 #[cfg(test)]
-mod tests {
+mod gps_tests {
+
     use crate::NmeaMessage;
 
     #[test]
     fn test_parses_talker_and_message_type() {
         let sentence = "$GPGGA,123519,4807.038,N,01131.000,E*6A";
 
-        let actual = NmeaMessage::from_bytes(sentence.as_bytes()).expect("nmea message to parse");
+        let buf = sentence.as_bytes();
+        let actual = NmeaMessage::from_bytes(buf).expect("nmea message to parse");
         let talker_str = String::from_utf8_lossy(&actual.talker);
         let msg_type_str = String::from_utf8_lossy(&actual.message_type);
 
@@ -60,9 +118,13 @@ mod tests {
 
     #[test]
     fn test_parses_different_talker_and_message_type() {
-        let sentence = "$GNRMC,123519,A,4807.038,N,01131.000,E*12";
+        let sentence = "$GNRMC,123519.000,A,4807.038,N,01131.000,E*12";
 
-        let actual = NmeaMessage::from_bytes(sentence.as_bytes()).expect("nmea message to parse");
+        let byte_sentence = sentence.as_bytes();
+        let cuh = &byte_sentence[13..20];
+        println!("{:?}", cuh);
+
+        let actual = NmeaMessage::from_bytes(byte_sentence).expect("nmea message to parse");
         let talker_str = String::from_utf8_lossy(&actual.talker);
         let msg_type_str = String::from_utf8_lossy(&actual.message_type);
 
@@ -72,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_rejects_message_missing_dollar_prefix() {
-        let sentence = "GPGGA,123519,4807.038,N,01131.000,E*6A";
+        let sentence = "GPGGA,123519.000,4807.038,N,01131.000,E*6A";
 
         let actual = NmeaMessage::from_bytes(sentence.as_bytes());
 

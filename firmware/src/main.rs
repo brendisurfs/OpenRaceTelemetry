@@ -1,7 +1,10 @@
-#![no_std]
 #![no_main]
+#![cfg_attr(not(test), no_std)]
+
+extern crate alloc;
 
 use defmt_rtt as _;
+use panic_probe as _;
 
 use defmt::*;
 use embassy_executor::Spawner;
@@ -11,18 +14,18 @@ use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
 use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
 use embassy_time::Duration;
-use panic_probe as _;
+use embedded_alloc::LlffHeap as Heap;
 
-mod blink;
-mod gps;
-mod imu;
-
-use blink::Led;
-use gps::Gps;
-use imu::Imu;
+use blink::{self, Led};
+use firmware::utils;
+use gps::{self, Gps};
+use imu::{self, Imu};
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
+
+#[global_allocator]
+static HEAP: Heap = Heap::empty();
 
 // reference: https://www.st.com/resource/en/reference_manual/rm0383-stm32f411xce-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
 bind_interrupts!(struct Irqs {
@@ -37,8 +40,16 @@ bind_interrupts!(struct Irqs {
     DMA2_STREAM2 => DmaInterruptHandler<peripherals::DMA2_CH2>; // USART1_RX
 });
 
+/// pre-defined heap size to allocate.
+const HEAP_SIZE: usize = 512;
+
 #[embassy_executor::main]
 async fn main(spawner: embassy_executor::Spawner) -> ! {
+    // SAFETY: We know we need to initialize allocator before we use it anywhere else.
+    unsafe {
+        embedded_alloc::init!(HEAP, HEAP_SIZE);
+    }
+
     let peri = embassy_stm32::init(Config::default());
 
     info!("ORT firmware started");

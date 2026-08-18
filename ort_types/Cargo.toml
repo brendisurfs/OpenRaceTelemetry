@@ -6,9 +6,12 @@ edition = "2024"
 [dependencies]
 defmt = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
+embedded-alloc = { workspace = true, optional = true }
 
 [features]
 default = []
+# Allows for embedded alloc to be used for parsing data without reinventing a linked list. 
+alloc = ["dep:embedded-alloc"]
 # Derives `defmt::Format` on the shared types, for firmware logging over RTT.
 defmt = ["dep:defmt"]
 # Derives `Serialize`/`Deserialize`, so the desktop app can move these types
