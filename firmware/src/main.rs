@@ -12,15 +12,17 @@ use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
 use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
 use embassy_time::Duration;
-use embedded_alloc::LlffHeap as Heap;
 
-use blink::{self, Led};
-use firmware::utils;
-use gps::{self, Gps};
-use imu::{self, Imu};
+mod blink;
+mod gps;
+mod imu;
 
-const BLINK_INTERVAL: Duration = Duration::from_millis(400);
+use blink::Led;
+use gps::Gps;
+use imu::Imu;
+
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
+const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 
 // reference: https://www.st.com/resource/en/reference_manual/rm0383-stm32f411xce-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
 bind_interrupts!(struct Irqs {
