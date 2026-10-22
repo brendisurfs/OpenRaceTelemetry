@@ -10,16 +10,17 @@ test = false
 bench = false
 
 [dependencies]
-cortex-m-rt = { workspace = true }
-cortex-m = { workspace = true }
-defmt = { workspace = true }
-defmt-rtt = { workspace = true }
-embassy-boot-stm32 = { workspace = true }
-embassy-executor = { workspace = true }
-embassy-stm32 = { workspace = true }
-embassy-time = { workspace = true }
-panic-probe = { workspace = true }
 libm = { workspace = true }
+defmt = { workspace = true }
+cortex-m = { workspace = true }
+defmt-rtt = { workspace = true }
+cortex-m-rt = { workspace = true }
+panic-probe = { workspace = true }
+embassy-time = { workspace = true }
+embassy-stm32 = { workspace = true }
+embassy-executor = { workspace = true }
+embassy-boot-stm32 = { workspace = true }
+block-device-driver = { workspace = true }
 ort_types = { path = "../ort_types", features = ["defmt"] }
 
 [package.metadata.embassy]
