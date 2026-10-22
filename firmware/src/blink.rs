@@ -74,7 +74,20 @@ pub async fn gps_warmup_blink(led: &mut Led<'_>) {
 /// delayed between on and off, never after off, so the flashes ran together;
 /// you probably want a delay on both edges here.
 pub async fn gps_connected_blink(led: &mut Led<'_>) {
-    todo!()
+    led.on();
+    Timer::after_millis(100).await;
+    led.off();
+    Timer::after_millis(100).await;
+
+    led.on();
+    Timer::after_millis(100).await;
+    led.off();
+    Timer::after_millis(100).await;
+
+    led.on();
+    Timer::after_millis(100).await;
+    led.off();
+    Timer::after_millis(100).await;
 }
 
 /// Heartbeat task: toggles the LED forever at a fixed interval.
