@@ -2,9 +2,7 @@
 
 
 # Open Race Telemetry
-Open Race Telemetry is an open-source telemetry system for motorcycle racers.
-It lets you build your own telemetry system at a low cost, compared to
-commercial systems.
+Open Race Telemetry is an open-source telemetry system for motorcycle racers, letting you build your own telemetry system at a low cost, compared to commercial systems.
 
 ### Status
 
