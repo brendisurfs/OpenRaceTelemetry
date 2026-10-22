@@ -4,47 +4,47 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
-	/**  A placeholder event example to eventually read data off of a component. */
-	readData: (onEvent: Channel<ReadEvent>) => __TAURI_INVOKE<void>("read_data", { onEvent }),
+  greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
+  /**  A placeholder event example to eventually read data off of a component. */
+  readData: (onEvent: Channel<ReadEvent>) => __TAURI_INVOKE<void>("read_data", { onEvent }),
 };
 
 /* Types */
 export type GPGGASentenceDto = {
-	talker: string,
-	/**  hhmmss.sss */
-	utcTime: number,
-	latitude: number | null,
-	/**  "N"=1, "S"=-1 */
-	latSign: LatSign,
-	longitude: number | null,
-	/**  E=1, W=-1 */
-	longSign: LongSign,
-	positionFixIndicator: PositionFixIndicator,
-	/**  apprently range is 0 - 12 */
-	satellitesUsed: number,
-	/**  Horizontal Dilution of Precision */
-	hdop: number | null,
-	mslAltitudeMeters: number | null,
-	/**  Meters */
-	units: number,
+  talker: string;
+  /**  hhmmss.sss */
+  utcTime: number;
+  latitude: number | null;
+  /**  "N"=1, "S"=-1 */
+  latSign: LatSign;
+  longitude: number | null;
+  /**  E=1, W=-1 */
+  longSign: LongSign;
+  positionFixIndicator: PositionFixIndicator;
+  /**  apprently range is 0 - 12 */
+  satellitesUsed: number;
+  /**  Horizontal Dilution of Precision */
+  hdop: number | null;
+  mslAltitudeMeters: number | null;
+  /**  Meters */
+  units: number;
 };
 
 /**
  *  One IMU sample, in raw register units.
- * 
+ *
  *  The fields need no conversion (they are already `i16`).
  *  DTO keeps `specta` out of `ort_types`, and it gives the
  *  frontend camelCase names to match `NmeaMessageDto`.
  */
 export type ImuDataDto = {
-	accelX: number,
-	accelY: number,
-	accelZ: number,
-	tempRaw: number,
-	gyroX: number,
-	gyroY: number,
-	gyroZ: number,
+  accelX: number;
+  accelY: number;
+  accelZ: number;
+  tempRaw: number;
+  gyroX: number;
+  gyroY: number;
+  gyroZ: number;
 };
 
 export type LatSign = "north" | "south";
@@ -53,15 +53,28 @@ export type LongSign = "east" | "west";
 
 /**  An NMEA prefix as the frontend sees it — `{ talker: "GP", messageType: "GGA" }`. */
 export type NmeaMessageDto = {
-	talker: string,
-	messageType: string,
+  talker: string;
+  messageType: string;
 };
 
-export type PositionFixIndicator = "notAvailableOrInvalid" | "gpsSPSModeFixValid" | "differentialGpsFixValid" | "deadReckoningMode";
+export type PositionFixIndicator =
+  | "notAvailableOrInvalid"
+  | "gpsSPSModeFixValid"
+  | "differentialGpsFixValid"
+  | "deadReckoningMode";
 
-export type ReadEvent = { event: "usbFound"; data: {
-	path: string,
-} } | { event: "started" } | { event: "progress"; data: {
-	progress: number,
-} } | { event: "finished" };
-
+export type ReadEvent =
+  | {
+      event: "usbFound";
+      data: {
+        path: string;
+      };
+    }
+  | { event: "started" }
+  | {
+      event: "progress";
+      data: {
+        progress: number;
+      };
+    }
+  | { event: "finished" };

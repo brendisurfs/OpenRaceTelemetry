@@ -5,12 +5,6 @@ use specta::Type;
 use tauri::{ipc::Channel, AppHandle};
 use tauri_specta::{collect_commands, Builder};
 
-#[tauri::command]
-#[specta::specta]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(
     rename_all = "camelCase",
@@ -27,7 +21,7 @@ pub enum ReadEvent<'a> {
 /// A placeholder event example to eventually read data off of a component.
 #[tauri::command]
 #[specta::specta]
-fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
+fn read_data(_app: AppHandle, on_event: Channel<ReadEvent>) {
     on_event
         .send(ReadEvent::Started)
         .expect("read event to send");
@@ -45,7 +39,7 @@ fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
 
 /// Commands and types exported to TypeScript.
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![greet, read_data])
+    Builder::<tauri::Wry>::new().commands(collect_commands![read_data])
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

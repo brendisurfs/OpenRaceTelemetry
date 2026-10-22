@@ -1,8 +1,4 @@
-import {
-  RiCommandFill,
-  RiLineChartFill,
-  RiPulseAiFill,
-} from "@remixicon/react";
+import { RiCommandFill, RiLineChartFill, RiPulseAiFill } from "@remixicon/react";
 
 export const MySidebar = () => {
   return (

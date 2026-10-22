@@ -1,5 +1,5 @@
 //! JSON/TypeScript representations of the shared telemetry types.
-//
+//!
 //! `ort_types` stores fixed-size ASCII fields as byte arrays, which is appropriate
 //! for the wire and event log but serializes to JSON as `[71, 80]`. These DTOs
 //! provide the frontend-facing shape: Strings converted once at the IPC

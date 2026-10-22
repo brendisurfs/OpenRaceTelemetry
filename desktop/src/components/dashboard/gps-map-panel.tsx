@@ -29,9 +29,7 @@ export const GpsMapPanel: FC<IDockviewPanelProps<GpsMapPanelProps>> = ({
     <div className="flex h-full flex-col items-center justify-center gap-2 bg-muted/30 p-4 text-center">
       <RiMapPin2Line className="size-8 text-muted-foreground" />
       <p className="text-sm font-medium">Map view — React Leaflet pending</p>
-      <p className="text-xs text-muted-foreground">
-        Tile caching will be handled by the backend
-      </p>
+      {/*<p className="text-xs text-muted-foreground">Tile caching will be handled by the backend</p> */}
       <div className="mt-2 flex gap-4 font-mono text-xs tabular-nums text-muted-foreground">
         <span>lat: {coordinate.latitude.toFixed(6)}</span>
         <span>lon: {coordinate.longitude.toFixed(6)}</span>

@@ -21,8 +21,10 @@ export const createAddTabControl = (
     }
 
     const onClick = () => {
+      const id = `${component}-${Date.now()}-${nextPanelId++}`;
+
       props.containerApi.addPanel({
-        id: `${component}-${Date.now()}-${nextPanelId++}`,
+        id,
         component,
         title: `${titlePrefix} ${nextPanelId}`,
         position: { referenceGroup: props.group },
@@ -31,19 +33,12 @@ export const createAddTabControl = (
 
     return (
       <div className="flex h-full items-center px-1">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Add tab"
-          onClick={onClick}
-        >
+        <Button variant="ghost" size="icon-sm" title="Add tab" onClick={onClick}>
           <RiAddLine />
         </Button>
       </div>
     );
   };
 
-  return (props) => (
-    <AddTabControl {...props} component={component} titlePrefix={titlePrefix} />
-  );
+  return (props) => <AddTabControl {...props} component={component} titlePrefix={titlePrefix} />;
 };

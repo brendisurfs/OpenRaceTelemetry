@@ -14,17 +14,15 @@ export type SpeedSample = {
 };
 
 /** Placeholder series until this binds to a real telemetry speed stream. */
-const PLACEHOLDER_SPEED_DATA: SpeedSample[] = Array.from(
-  { length: 30 },
-  (_, i) => {
-    const t = i * 2;
-    const speedKph = 140 + 90 * Math.sin(t / 6) - (i % 7 === 0 ? 60 : 0);
-    return {
-      time: `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`,
-      speedKph: Math.max(0, Math.round(speedKph)),
-    };
-  },
-);
+const PLACEHOLDER_SPEED_DATA: SpeedSample[] = Array.from({ length: 30 }, (_, i) => {
+  const t = i * 2;
+  const speedKph = 140 + 90 * Math.sin(t / 6) - (i % 7 === 0 ? 60 : 0);
+
+  return {
+    time: `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`,
+    speedKph: Math.max(0, Math.round(speedKph)),
+  };
+});
 
 const speedChartConfig = {
   speedKph: {

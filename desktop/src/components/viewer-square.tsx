@@ -1,15 +1,11 @@
 import type { FC } from "react";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
 interface ViewerSquareProps {
   title?: string;
 }
 
-const ViewerSquare: FC<ViewerSquareProps> = ({ title }) => {
+const ViewerSquare: FC<ViewerSquareProps> = () => {
   return (
     <div className="grow  m-4 h-screen">
       <ResizablePanelGroup orientation="horizontal">

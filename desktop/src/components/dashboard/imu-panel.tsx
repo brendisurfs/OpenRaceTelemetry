@@ -22,8 +22,7 @@ const PLACEHOLDER_IMU: ImuDataDto = {
 
 /** Placeholder raw->display conversion. Real scale factors come from the sensor datasheet later. */
 function deriveMotionSummary(imu: ImuDataDto) {
-  const gForce =
-    Math.sqrt(imu.accelX ** 2 + imu.accelY ** 2 + imu.accelZ ** 2) / 16384;
+  const gForce = Math.sqrt(imu.accelX ** 2 + imu.accelY ** 2 + imu.accelZ ** 2) / 16384;
   const leanAngle = (Math.atan2(imu.accelY, imu.accelZ) * 180) / Math.PI;
 
   return { gForce, leanAngle };
@@ -70,9 +69,7 @@ export const ImuPanel: FC<IDockviewPanelProps<ImuPanelProps>> = ({
           {rows.map(([label, value]) => (
             <TableRow key={label}>
               <TableCell className="text-muted-foreground">{label}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">
-                {value}
-              </TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{value}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -83,10 +80,7 @@ export const ImuPanel: FC<IDockviewPanelProps<ImuPanelProps>> = ({
           <span>G-Force: {gForce.toFixed(2)}g</span>
           <span>Lean: {leanAngle.toFixed(1)}°</span>
         </div>
-        <ChartContainer
-          config={radarChartConfig}
-          className="mx-auto aspect-square max-h-52"
-        >
+        <ChartContainer config={radarChartConfig} className="mx-auto aspect-square max-h-52">
           <RadarChart data={radarData}>
             <ChartTooltip content={<ChartTooltipContent />} />
             <PolarGrid />
