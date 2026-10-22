@@ -13,9 +13,9 @@ use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
 use embassy_time::Duration;
 use panic_probe as _;
 
-mod blink;
 mod gps;
 mod imu;
+mod utils;
 
 use blink::Led;
 use gps::Gps;
