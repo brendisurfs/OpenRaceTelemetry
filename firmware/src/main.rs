@@ -5,11 +5,11 @@ use defmt_rtt as _;
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_stm32::dma::InterruptHandler as DmaInterruptHandler;
+use embassy_stm32::dma::{self, InterruptHandler as DmaInterruptHandler};
 use embassy_stm32::i2c::I2c;
 use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
-use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
+use embassy_stm32::{Config, bind_interrupts, i2c, peripherals, sdmmc};
 use embassy_time::Duration;
 use panic_probe as _;
 
@@ -29,12 +29,18 @@ bind_interrupts!(struct Irqs {
     I2C1_EV => i2c::EventInterruptHandler<peripherals::I2C1>;
     I2C1_ER => i2c::ErrorInterruptHandler<peripherals::I2C1>;
     USART1 => usart::InterruptHandler<peripherals::USART1>;
+
     // DMA_CHn type is pinned to stream n, so the stream number in the interrupt name should match the channel number in the type.
     DMA1_STREAM0 => DmaInterruptHandler<peripherals::DMA1_CH0>; // I2C1_RX
     DMA1_STREAM6 => DmaInterruptHandler<peripherals::DMA1_CH6>; // I2C1_TX
+
     // This is for the USART stream
     DMA2_STREAM7 => DmaInterruptHandler<peripherals::DMA2_CH7>; // USART1_TX
     DMA2_STREAM2 => DmaInterruptHandler<peripherals::DMA2_CH2>; // USART1_RX
+
+    // These are used for MicroSD card reading.
+    SDIO => sdmmc::InterruptHandler<peripherals::SDIO>;
+    DMA2_STREAM3 => dma::InterruptHandler<peripherals::DMA2_CH3>;
 });
 
 #[embassy_executor::main]
