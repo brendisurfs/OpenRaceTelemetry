@@ -1,123 +1,58 @@
 <img width="1280" height="320" alt="OrtGithubImage" src="https://github.com/user-attachments/assets/187a4ebe-e4b7-43f4-907a-d34e5ed48dbb" />
 
-
 # Open Race Telemetry
+
 Open Race Telemetry is an open-source telemetry system for motorcycle racers, letting you build your own telemetry system at a low cost, compared to commercial systems.
+
+_Quick mention_
+
+> I decided to re-write this README because the original one I wrote with AI assistance, and that felt...wrong. This project is part learning, part seeing a real project through to the end, building something I want to use every single day. I want to be able to describe, in detail, every part of this project from memory.
+> So, unless its like an emergency or something, no AI usage for helping with docs or just banging out features. I want to suffer through the learning process. Thanks!
 
 ### Status
 
-🚧 In progress. This project is under active development. It is not ready
-for use.
-
-The project moved from C++ and PlatformIO on an ESP32 to Rust and Embassy on
-an STM32F411CE. The shared types crate and the desktop app build. Their tests
-pass. The firmware crate builds too, but many function bodies are not
-complete yet. See [Current State](#current-state) for the full detail.
+NOTE: This project is under active development. It is not ready
+for commercial/official use yet.
 
 ### Overview
 
-Telemetry is important in racing. It lets you map your racing lines and your
-speed in corners. It shows you the places where you can push harder. This
-data helps you improve your lap times.
+Telemetry is incredibly important in motorsports and mechanical systems of all kinds, as it gives you detailed information about your hardware with detailed precision.
 
-The goal of this project is to give racers a telemetry system they can
-customize, extend, and adapt for their own needs (an alternative to closed
-commercial systems).
+In motorcycles, this is just as important. Not only for the various safety features it provides (adaptive rear braking, IMU lean angle sensitivity for traction control, wheelie control, etc.), but it allows for competitive riders to dial in their craft and extract the best lap times they can.
 
-This repository holds the software for the Open Race Telemetry project. The
-software reads data from an IMU and a GPS receiver on a microcontroller. It
-sends the telemetry to a desktop application for display.
+The goal of this project is to enable everyone on two wheels (and even four!) to access detailed telemetry at a reasonable price, all while knowing your data isn't being sold.
 
 ### Project Structure
 
-The repository has two Cargo workspaces and three crates. The firmware is its
-own workspace. Tools that analyze one target per workspace, such as
-rust-analyzer, can then analyze the firmware for `thumbv7em-none-eabi` at the
-same time as the host crates.
+This repo contains two Cargo workspaces and three crates. the `firmware` crate is its own workspace. This is due to rust-analyzer only being able to analyze one workspace target at a time.
 
-| Path | Crate | Purpose |
-| --- | --- | --- |
-| `ort_types/` | `ort_types` | Data types shared by the firmware and the desktop app. It is `no_std`. It has no hardware access and no sensor math. |
-| `firmware/` | `firmware` | Embassy firmware for the STM32F411CE. It builds for the `thumbv7em-none-eabi` target. It produces the `ort_firmware` binary. |
-| `desktop/` | `desktop` | Tauri 2 desktop application. The Rust backend is in `desktop/src-tauri/`. The React and TypeScript frontend is in `desktop/src/`. |
+| Path         | Crate       | Purpose                                                                                                                           |
+| ------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ort_types/` | `ort_types` | Data types shared by the firmware and the desktop app. It is `no_std`. It has no hardware access and no sensor math.              |
+| `firmware/`  | `firmware`  | Embassy firmware for the STM32F411CE. It builds for the `thumbv7em-none-eabi` target. It produces the `ort_firmware` binary.      |
+| `desktop/`   | `desktop`   | Tauri 2 desktop application. The Rust backend is in `desktop/src-tauri/`. The React and TypeScript frontend is in `desktop/src/`. |
 
-The firmware and the desktop app build for different targets. They cannot
-build together in one command. `firmware/.cargo/config.toml` sets the firmware
-target to `thumbv7em-none-eabi`. The root workspace builds for the host. A
-bare `cargo build` command in the repository root builds only `ort_types`,
-because the workspace sets `default-members` to that crate.
+While the firmware and desktop app build for different targets, you are able to use `just` to build both sequentially.
 
-#### Shared types
+### Packages
 
-`ort_types` holds the data that crosses the boundary between the device and
-the desktop app.
+- `ort_types`
+- `desktop`
+- `firmware`
 
-- `ImuData` is one sample set from the MPU6050, in raw register units.
-  `ImuData::from_bytes` decodes the 14-byte burst read.
-- `NmeaMessage` is the talker code and the message type from an NMEA
-  sentence. For example, `$GPGGA,...` gives the talker code `GP` and the
-  message type `GGA`. `NmeaMessage::from_bytes` parses the prefix.
+**What works right now**
+as of 2026-10-23, here are the parts that work:
 
-Two optional features control the derives. This way, neither consumer pays
-for the other. The `defmt` feature is for the firmware and its RTT logging.
-The `serde` feature is for the desktop app and its JSON.
+- `ort_types` builds and it's tests pass.
+- Byte parsing for Nmea messages and Imu data are complete (unless I find something new or make a change to the hardware).
+- The desktop builds, however the UI is not complete.
+- `imu/math.rs` is considered complete. It holds the math that converts raw register values to usable data. Since it has no hardware access, it is easy to unit test.
 
-The crate stores fixed-size ASCII fields as byte arrays. This format matches
-the wire format and the event log. It also keeps the types `Copy` and free
-of allocation.
+**Incomplete**
 
-#### Desktop data flow
-
-The Rust backend gives the frontend a different data shape than the wire
-format. The data transfer objects (DTOs) in `desktop/src-tauri/src/dto.rs`
-convert the byte arrays to strings. This conversion happens one time, at the
-IPC boundary. This method keeps `ort_types` `no_std` and free of codegen
-concerns. It also makes sure the generated TypeScript matches the JSON that
-the backend sends.
-
-- `NmeaMessageDto` converts the ASCII byte arrays to `String`. A corrupt
-  frame becomes the character U+FFFD. The IPC call does not fail.
-- `ImuDataDto` keeps the `i16` register values. It gives the frontend
-  camelCase field names.
-
-`specta` and `tauri-specta` generate the file `desktop/src/bindings.ts` from
-the Tauri commands. This generation runs as a test. It does not run at
-application start. A test makes CI fail on a stale checked-in file. If the
-generation ran at start instead, the application could ship bindings that
-disagree with the Rust commands.
-
-A type appears in `bindings.ts` only when a command uses it. The
-`imu_sample` command exists now for this reason. It is placeholder wiring.
-
-### Current State
-
-Read this section before you build the project. It tells you what works now.
-
-**Works and is tested**
-
-- `ort_types` builds. Its tests pass. `NmeaMessage::from_bytes` and
-  `ImuData::from_bytes` are complete.
-- The desktop backend builds. Its 4 tests pass. The DTO conversions are
-  complete. `desktop/src/bindings.ts` matches the Rust commands.
-- `firmware/src/imu/math.rs` is complete. It holds the math that converts
-  raw register values to physical units. It has no hardware access.
-
-**Builds, but is not complete**
-
-- The firmware builds for `thumbv7em-none-eabi` with `just build-firmware`.
-- Many function bodies use `todo!()` or `defmt::todo!()`. These functions
-  will panic if you call them on real hardware. The doc comments above each
-  function state the intended behavior. Use them as the specification for
-  the work.
-  - `firmware/src/blink.rs`: `FlashDelay::duration`, `gps_connected_blink`,
-    and `blink_task`.
-  - `firmware/src/gps.rs`: `Gps::new`, `Gps::read_sentence`, and
-    `setup_gps`.
-  - `firmware/src/imu/mod.rs`: `scan_i2c_bus`, `log_roll_pitch`,
-    `log_raw_imu_data`, and `imu_task`.
-- The frontend in `desktop/src/App.tsx` is the default Tauri and React
-  template. It does not call the `parse_nmea` command or the `imu_sample`
-  command yet.
+- The firmware technically builds, but many features are yet to be implemented.
+- Many of the function bodies have `todo!()` placeholders. They will panic if you call them.
+- The desktop app is incomplete. This will be the last thing I work on. I have scaffolded a demo UI in another branch at the time of writing, however, it is not the final decision and was just testing. Once the hardware and data layers are stable, I will focus on the desktop app.
 
 ### Running
 
@@ -153,11 +88,11 @@ Read this section before you build the project. It tells you what works now.
 
 #### Hardware
 
-| Signal | Pin | Notes |
-| --- | --- | --- |
-| Status LED | PC13 | On the board. It is active-low. A low level turns the LED on. |
-| IMU (I2C1) | PB6 = SCL, PB7 = SDA | MPU6050 at address 0x68 with AD0 low, or 0x69 with AD0 high. |
-| GPS (USART1) | PA9 = TX, PA10 = RX | TX goes from the MCU to the GPS. RX comes from the GPS to the MCU. The default rate is 9600 baud. |
+| Signal       | Pin                  | Notes                                                                                             |
+| ------------ | -------------------- | ------------------------------------------------------------------------------------------------- |
+| Status LED   | PC13                 | On the board. It is active-low. A low level turns the LED on.                                     |
+| IMU (I2C1)   | PB6 = SCL, PB7 = SDA | MPU6050 at address 0x68 with AD0 low, or 0x69 with AD0 high.                                      |
+| GPS (USART1) | PA9 = TX, PA10 = RX  | TX goes from the MCU to the GPS. RX comes from the GPS to the MCU. The default rate is 9600 baud. |
 
 The I2C lines need external 4.7k pull-up resistors to 3V3. `embassy-stm32`
 configures the I2C pins as open-drain. It does not supply pull-ups. The
@@ -204,40 +139,6 @@ To flash across USB with DFU instead of an ST-Link, put the chip into DFU
 mode with the same three button steps. Then run `just dfu`. This recipe
 needs `cargo-binutils` and `dfu-util`.
 
-#### Desktop application
-
-```bash
-cd desktop
-bun install
-bun run tauri dev     # start the application in development mode
-bun run tauri build   # build a bundle with the `dist` profile
-```
-
-Cargo reads `[profile.*]` settings only from the root of the workspace. For
-this reason, the `dist` profile is in the root `Cargo.toml`, not in
-`desktop/src-tauri/Cargo.toml`.
-
-#### Tests
-
-```bash
-just test-types            # cargo test -p ort_types
-cargo test -p desktop      # DTO conversions and the TypeScript binding export
-```
-
-The desktop test suite writes the file `desktop/src/bindings.ts`. Run this
-test after you change a Tauri command or a DTO. Commit the result.
-
-### Contributing
-
-Contributions are welcome. This includes ideas, bug fixes, and features. A
-feature or an idea can be refused if it does not agree with the goal of this
-project (a stable, robust, open DIY platform for race telemetry). To
-contribute, look at the open issues, or open a new issue.
-
-The `todo!()` function bodies listed in [Current State](#current-state) are
-a good place to start. Each stub has a doc comment that states the intended
-behavior.
-
 ### Troubleshooting
 
 #### `probe-rs` cannot attach to the target
@@ -268,3 +169,14 @@ From the `firmware/` directory, `cargo build` reads
 
 Run `cargo test -p desktop`. This test regenerates the file
 `desktop/src/bindings.ts`. Commit the file after the test writes it.
+
+### Contributing
+
+Contributions are always welcome! Right now, I will happily read any feature ideas, bug fixes, or design proposals. A feature or idea may be refused if it does not align with the immediate goal of the project (that being a stable, open-source DIY platform for race telemetry). If any PRs are opened and its just straight up AI, I will most definitely refuse it.
+To contribute, please look at the open issues, or open a new issue.
+
+### Thank you
+
+Thanks for checking out my project! I am incredibly passionate for motorsports, software, and I love the challenge of building something that is out of my comfort zone. This is all a learning process for me on the hardware side, so for now, development is slower as I take the time to truly learn each thing I am doing, and not copy-pasting code from embassy's examples.
+
+\- Brendan
