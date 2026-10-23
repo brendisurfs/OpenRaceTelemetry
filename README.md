@@ -30,7 +30,10 @@ sends the telemetry to a desktop application for display.
 
 ### Project Structure
 
-The repository is a Cargo workspace. It has three crates.
+The repository has two Cargo workspaces and three crates. The firmware is its
+own workspace. Tools that analyze one target per workspace, such as
+rust-analyzer, can then analyze the firmware for `thumbv7em-none-eabi` at the
+same time as the host crates.
 
 | Path | Crate | Purpose |
 | --- | --- | --- |
@@ -39,8 +42,10 @@ The repository is a Cargo workspace. It has three crates.
 | `desktop/` | `desktop` | Tauri 2 desktop application. The Rust backend is in `desktop/src-tauri/`. The React and TypeScript frontend is in `desktop/src/`. |
 
 The firmware and the desktop app build for different targets. They cannot
-build together in one command. A bare `cargo build` command builds only
-`ort_types`, because the workspace sets `default-members` to that crate.
+build together in one command. `firmware/.cargo/config.toml` sets the firmware
+target to `thumbv7em-none-eabi`. The root workspace builds for the host. A
+bare `cargo build` command in the repository root builds only `ort_types`,
+because the workspace sets `default-members` to that crate.
 
 #### Shared types
 
@@ -99,8 +104,7 @@ Read this section before you build the project. It tells you what works now.
 
 **Builds, but is not complete**
 
-- `cargo build -p firmware --target thumbv7em-none-eabi` succeeds. The crate
-  compiles.
+- The firmware builds for `thumbv7em-none-eabi` with `just build-firmware`.
 - Many function bodies use `todo!()` or `defmt::todo!()`. These functions
   will panic if you call them on real hardware. The doc comments above each
   function state the intended behavior. Use them as the specification for
@@ -167,7 +171,7 @@ firmware built from this code will panic at those `todo!()` calls. See
 [Current State](#current-state).
 
 ```bash
-just build     # cargo build -p firmware --target thumbv7em-none-eabi --release
+just build-firmware  # build the firmware for thumbv7em-none-eabi
 just run       # build, flash, and stream the defmt logs over RTT
 just flash     # build, flash, reset, and detach
 just reset     # reset the target without a new flash
@@ -244,10 +248,21 @@ it again.
 
 #### `cargo build` builds only `ort_types`
 
-This is correct. The firmware crate builds for `thumbv7em-none-eabi`. The
-desktop app builds for the host. These targets cannot build in the same
-command. The workspace sets `default-members` to `ort_types`. Give a target
-with the `-p` flag to build the other crates.
+This is correct. The firmware has its own workspace and builds for
+`thumbv7em-none-eabi`. The desktop app builds for the host. These targets
+cannot build in the same command. The root workspace sets `default-members`
+to `ort_types`.
+
+Use the manifest path to build the firmware from the repository root:
+
+```bash
+cargo build --manifest-path firmware/Cargo.toml --target thumbv7em-none-eabi
+```
+
+From the `firmware/` directory, `cargo build` reads
+`firmware/.cargo/config.toml` and uses the correct target. The command
+`cargo build -p firmware` from the repository root does not work, because
+`firmware` is not a member of the root workspace.
 
 #### The TypeScript bindings disagree with the Rust commands
 
