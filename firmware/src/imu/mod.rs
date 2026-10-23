@@ -24,7 +24,6 @@ pub const IMU_READ_INTERVAL: Duration = Duration::from_millis(20);
 
 /// 7-bit address of the MPU6050 with AD0 tied low. Tie AD0 high for 0x69.
 const MPU_ADDR: u8 = 0x68;
-
 const PWR_MGMT_REG: u8 = 0x6B;
 const GYRO_CONFIG: u8 = 0x1B;
 const ACCEL_CONFIG: u8 = 0x1C;

@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![allow(unused)]
 
 use defmt_rtt as _;
 
@@ -18,11 +19,13 @@ mod gps;
 mod imu;
 mod utils;
 
-use utils::blink::{self, Led};
 use gps::Gps;
 use imu::Imu;
+use utils::blink::{self, Led};
 
-use crate::utils::store::connect_sd_card_spi;
+use crate::utils::store::connect_to_sd_card;
+
+// use crate::utils::store::connect_sd_card_spi;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
@@ -48,7 +51,35 @@ bind_interrupts!(struct Irqs {
 
 #[embassy_executor::main]
 async fn main(spawner: embassy_executor::Spawner) -> ! {
-    let peri = embassy_stm32::init(Config::default());
+    let mut config = Config::default();
+    // NOTE: Im going to be really honest here:
+    // I have no clue what half this setup is for sdmmc.
+    // But the example shows it, and im going to figure it out.
+    // All I know is that I need it. Learning as I go.
+    {
+        use embassy_stm32::rcc::*;
+        config.rcc.hse = Some(Hse {
+            freq: Hertz(8_000_000),
+            mode: HseMode::Bypass,
+        });
+
+        config.rcc.pll_src = PllSource::HSE;
+
+        config.rcc.pll = Some(Pll {
+            prediv: PllPreDiv::DIV4,
+            mul: PllMul::MUL168,
+            divp: Some(PllPDiv::DIV2), // 8mhz / 4 * 168 / 2 = 168Mhz.
+            divq: Some(PllQDiv::DIV7), // 8mhz / 4 * 168 / 7 = 48Mhz.
+            divr: None,
+        });
+
+        config.rcc.ahb_pre = AHBPrescaler::DIV1;
+        config.rcc.apb1_pre = APBPrescaler::DIV4;
+        config.rcc.apb2_pre = APBPrescaler::DIV2;
+        config.rcc.sys = Sysclk::PLL1_P;
+    }
+
+    let peri = embassy_stm32::init(config);
 
     info!("ORT firmware started");
     let mut led = Led::new(peri.PC13.into());
@@ -88,22 +119,22 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
     info!("Setting up gps");
     // let mut gps = Gps::new(uart);
 
-    info!("Setting up SD card interface");
     // Sdmmc connect for sd card interface
-    let sdmmc_conn = Sdmmc::new_4bit(
+
+    info!("Setting up SD card interface");
+    let sdmmc_config = sdmmc::Config::default();
+
+    let mut sdmmc_bus = Sdmmc::new_1bit(
         peri.SDIO,
         peri.DMA2_CH3,
         Irqs,
-        peri.PA12,
-        peri.PA2,
-        peri.PA8,
-        peri.PA9,
-        peri.PA10,
-        peri.PA11,
-        Default::default(),
+        peri.PB15,
+        peri.PA6,
+        peri.PB4,
+        sdmmc_config,
     );
 
-    connect_sd_card_spi(sdmmc_conn, &peri).await;
+    connect_to_sd_card(sdmmc_bus);
 
     loop {
         info!("Running blink");
