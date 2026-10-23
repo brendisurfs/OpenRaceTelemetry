@@ -7,6 +7,7 @@ use defmt::*;
 use embassy_executor::Spawner;
 use embassy_stm32::dma::{self, InterruptHandler as DmaInterruptHandler};
 use embassy_stm32::i2c::I2c;
+use embassy_stm32::sdmmc::Sdmmc;
 use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
 use embassy_stm32::{Config, bind_interrupts, i2c, peripherals, sdmmc};
@@ -20,6 +21,8 @@ mod utils;
 use blink::Led;
 use gps::Gps;
 use imu::Imu;
+
+use crate::utils::store::connect_sd_card_spi;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
@@ -84,6 +87,23 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
 
     info!("Setting up gps");
     // let mut gps = Gps::new(uart);
+
+    info!("Setting up SD card interface");
+    // Sdmmc connect for sd card interface
+    let sdmmc_conn = Sdmmc::new_4bit(
+        peri.SDIO,
+        peri.DMA2_CH3,
+        Irqs,
+        peri.PA12,
+        peri.PA2,
+        peri.PA8,
+        peri.PA9,
+        peri.PA10,
+        peri.PA11,
+        Default::default(),
+    );
+
+    connect_sd_card_spi(sdmmc_conn, &peri).await;
 
     loop {
         info!("Running blink");

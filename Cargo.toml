@@ -29,10 +29,10 @@ embassy-stm32 = { version = "0.6.0", features = [
   "time-driver-any",
 ] }
 block-device-driver = { version = "0.2.0" }
-
 embassy-time = "0.5.1"
 panic-probe = "1.0.0"
 libm = "0.2.11"
+sdio = { version = "0.5.3" }
 
 # `default-features = false` keeps serde no_std-compatible; the desktop crate
 # turns `std` back on via its own dependency on serde.
