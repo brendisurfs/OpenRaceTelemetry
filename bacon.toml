@@ -18,8 +18,8 @@ need_stdout = false
 command = [
   "cargo",
   "check",
-  "-p",
-  "firmware",
+  "--manifest-path",
+  "firmware/Cargo.toml",
   "--target",
   "thumbv7em-none-eabi",
 ]
