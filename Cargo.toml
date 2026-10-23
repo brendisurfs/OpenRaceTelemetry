@@ -1,25 +1,18 @@
 [workspace]
-members = ["firmware", "ort_types", "desktop/src-tauri"]
-# firmware builds for thumbv7em, desktop for the host — they can't build
-# together, so a bare `cargo build` covers only the shared crate.
+members = ["ort_types", "desktop/src-tauri"]
+exclude = ["firmware"]
+# The firmware has its own workspace (firmware/Cargo.toml) so rust-analyzer
+# can analyze it for thumbv7em while this workspace runs on the host. A bare
+# `cargo build` here covers only the shared crate.
 default-members = ["ort_types"]
 resolver = "3"
 
 
 [workspace.dependencies]
-cortex-m-rt = "0.7.5"
+# Also used by the firmware workspace, which pins the same version. Keep the
+# two in sync: `ort_types` derives `defmt::Format` against the defmt it is
+# built with.
 defmt = "1.1.1"
-defmt-rtt = "1.0.0"
-embassy-boot-stm32 = "0.8.0"
-embassy-executor = { version = "0.10.0", features = [
-  "platform-cortex-m",
-  "executor-thread",
-  "defmt",
-] }
-cortex-m = { version = "0.7.6", features = [
-  "inline-asm",
-  "critical-section-single-core",
-] }
 
 
 embassy-stm32 = { version = "0.6.0", features = [
@@ -45,11 +38,6 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 # need. Only the desktop crate depends on specta, so the firmware pays nothing.
 specta = { version = "=2.0.0-rc.25", features = ["derive", "std"] }
 specta-typescript = "0.0.12"
-
-# Firmware ships with symbols: probe-rs and defmt decode addresses against
-# them, and they live in the ELF, not the flashed image.
-[profile.release]
-debug = 2
 
 # Desktop bundles are built with `--profile dist` (see desktop/tauri.conf.json).
 # Cargo only honours [profile.*] in the workspace root, so these settings —

@@ -1,3 +1,38 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+# The firmware is its own workspace. rust-analyzer analyzes one target per
+# workspace, so this lets the IDE analyze the firmware for thumbv7em at the
+# same time as the root workspace runs on the host. `firmware/.cargo/config.toml`
+# sets that target.
+#
+# Keep `defmt` equal to the version in the root workspace. `ort_types` derives
+# `defmt::Format` against the defmt it is built with.
+[workspace.dependencies]
+defmt = "1.1.1"
+embassy-time = "0.5.1"
+embassy-stm32 = { version = "0.6.0", features = [
+  "stm32f411ce",
+  "memory-x",
+  "rt",
+  "time-driver-any",
+] }
+embassy-executor = { version = "0.10.0", features = [
+  "platform-cortex-m",
+  "executor-thread",
+  "defmt",
+] }
+embassy-boot-stm32 = "0.8.0"
+cortex-m = { version = "0.7.6", features = [
+  "inline-asm",
+  "critical-section-single-core",
+] }
+cortex-m-rt = "0.7.5"
+defmt-rtt = "1.0.0"
+panic-probe = "1.0.0"
+libm = "0.2.11"
+
 [package]
 name = "firmware"
 version = "0.1.0"
@@ -23,6 +58,11 @@ embassy-executor = { workspace = true }
 embassy-boot-stm32 = { workspace = true }
 block-device-driver = { workspace = true }
 ort_types = { path = "../ort_types", features = ["defmt"] }
+
+# Firmware ships with symbols: probe-rs and defmt decode addresses against
+# them, and they live in the ELF, not the flashed image.
+[profile.release]
+debug = 2
 
 [package.metadata.embassy]
 build = [
