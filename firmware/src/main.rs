@@ -17,7 +17,7 @@ mod gps;
 mod imu;
 mod utils;
 
-use blink::Led;
+use utils::blink::{self, Led};
 use gps::Gps;
 use imu::Imu;
 

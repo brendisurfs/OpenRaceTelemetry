@@ -1,6 +1,5 @@
-pkg := "firmware"
 target := "thumbv7em-none-eabi"
-bin := "target/" + target + "/release/ort_firmware"
+bin := "firmware/target/" + target + "/release/ort_firmware"
 chip := "STM32F411CE"
 
 # NOTE: --connect-under-reset is deliberately NOT used here. It requires NRST to
@@ -35,7 +34,7 @@ unbrick:
 
 # Flash via USB DFU bootloader (put chip in DFU mode first: hold BOOT0, tap NRST, release BOOT0)
 dfu: build-firmware
-    cargo objcopy -p {{ pkg }} --target {{ target }} --release -- -O binary {{ bin }}.bin
+    cargo objcopy --manifest-path firmware/Cargo.toml --target {{ target }} --release -- -O binary {{ bin }}.bin
     dfu-util -a 0 -s 0x08000000:leave -D {{ bin }}.bin -d 0483:df11
 
 probes:
@@ -51,10 +50,10 @@ coverage:
     cargo llvm-cov
 
 build-firmware:
-    cargo build -p {{ pkg }} --target {{ target }} --release
+    cargo build --manifest-path firmware/Cargo.toml --target {{ target }} --release
 
 check-firmware:
-    cargo check -p firmware --target thumbv7em-none-eabi
+    cargo check --manifest-path firmware/Cargo.toml --target {{ target }}
 
 # --- DESKTOP ----------
 #
