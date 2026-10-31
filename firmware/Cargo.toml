@@ -18,6 +18,7 @@ embassy-stm32 = { version = "0.6.0", features = [
   "rt",
   "time-driver-any",
 ] }
+embassy-sync = "0.8.0"
 embassy-executor = { version = "0.10.0", features = [
   "platform-cortex-m",
   "executor-thread",
@@ -45,16 +46,17 @@ test = false
 bench = false
 
 [dependencies]
-cortex-m-rt = { workspace = true }
-cortex-m = { workspace = true }
-defmt = { workspace = true }
-defmt-rtt = { workspace = true }
-embassy-boot-stm32 = { workspace = true }
-embassy-executor = { workspace = true }
-embassy-stm32 = { workspace = true }
-embassy-time = { workspace = true }
-panic-probe = { workspace = true }
 libm = { workspace = true }
+defmt = { workspace = true }
+cortex-m = { workspace = true }
+defmt-rtt = { workspace = true }
+cortex-m-rt = { workspace = true }
+panic-probe = { workspace = true }
+embassy-time = { workspace = true }
+embassy-sync = { workspace = true }
+embassy-stm32 = { workspace = true }
+embassy-executor = { workspace = true }
+embassy-boot-stm32 = { workspace = true }
 ort_types = { path = "../ort_types", features = ["defmt"] }
 
 # Firmware ships with symbols: probe-rs and defmt decode addresses against

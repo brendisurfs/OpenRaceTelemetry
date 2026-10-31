@@ -3,7 +3,6 @@
 /// NMEA sentences are printable ASCII, at most 82 bytes including the
 /// leading `$` and the trailing CRLF.
 pub const NMEA_MAX_LEN: usize = 82;
-
 /// Result of parsing an NMEA sentence's talker/message-type prefix.
 ///
 /// For example `"$GPGGA,..."` has talker `"GP"` and message type `"GGA"`.

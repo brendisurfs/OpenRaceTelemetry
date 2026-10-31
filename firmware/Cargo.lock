@@ -618,6 +618,7 @@ dependencies = [
  "embassy-boot-stm32",
  "embassy-executor",
  "embassy-stm32",
+ "embassy-sync",
  "embassy-time",
  "libm",
  "ort_types",

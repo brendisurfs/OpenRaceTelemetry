@@ -5,21 +5,26 @@ use defmt_rtt as _;
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_stm32::dma::InterruptHandler as DmaInterruptHandler;
+use embassy_stm32::dma::{Channel, InterruptHandler as DmaInterruptHandler};
 use embassy_stm32::i2c::I2c;
 use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
 use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
+use embassy_sync::blocking_mutex::raw::NoopRawMutex;
+use embassy_sync::zerocopy_channel::Channel as ZeroCopyChannel;
 use embassy_time::Duration;
+use ort_types::NmeaMessage;
 use panic_probe as _;
 
 mod gps;
 mod imu;
 mod utils;
 
-use utils::blink::{self, Led};
 use gps::Gps;
 use imu::Imu;
+use utils::blink::{self, Led};
+
+use crate::gps::run_gps_loop;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
@@ -65,6 +70,7 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
     let mut uart_config = usart::Config::default();
     uart_config.baudrate = gps::GPS_BAUD;
 
+    // UART config for GPS with DMA
     let uart = Uart::new(
         peri.USART1,
         peri.PA10,
@@ -78,6 +84,13 @@ async fn main(spawner: embassy_executor::Spawner) -> ! {
 
     info!("Setting up gps");
     // let mut gps = Gps::new(uart);
+
+    // GPS loop
+    let mut nmea_buf = [NmeaMessage::default(); 16];
+    // let mut chan = ZeroCopyChannel::<NoopRawMutex, NmeaMessage>::new(&mut nmea_buf);
+    // let (nmea_tx, nmea_rx) = chan.split();
+
+    spawner.spawn(run_gps_loop(uart).expect("error running gps loop"));
 
     loop {
         info!("Running blink");
