@@ -95,4 +95,12 @@ mod tests {
 
         assert_eq!(None, actual);
     }
+
+    #[test]
+    fn test_rmc() {
+        let msg = b"$GPRMC,120001.20,A,3007.8289,N,09738.8963,W,117.36,127.37,271026,,,A*40";
+        let actual = NmeaMessage::from_bytes(msg).expect("error parsing RNC message");
+
+        assert
+    }
 }

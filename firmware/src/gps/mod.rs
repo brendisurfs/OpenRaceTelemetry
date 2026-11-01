@@ -41,10 +41,10 @@ impl<'d> Gps<'d> {
         self.uart.read(&mut buf_two).await?;
 
         let Some(msg) = NmeaMessage::from_bytes(&buf_two) else {
-            return Err(usart::Error::Framing);
+            return Err(usart::Error::BufferTooLong);
         };
 
-        defmt::todo!()
+        Ok(msg)
     }
 }
 
