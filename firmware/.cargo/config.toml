@@ -1,0 +1,16 @@
+# This file lives next to `firmware/Cargo.toml`, so cargo reads it when the
+# current directory is `firmware/` (including every rust-analyzer invocation
+# for the firmware workspace). The root workspace is not affected.
+#
+# Recipes that run from the repository root must pass `--target` explicitly:
+# cargo discovers `.cargo/config.toml` from the current directory, not from
+# `--manifest-path`.
+[build]
+target = "thumbv7em-none-eabi"
+
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+# replace STM32F411CE with your chip as listed in `probe-rs chip list`
+runner = "probe-rs run --chip STM32F411CE"
+
+[env]
+DEFMT_LOG = "trace"

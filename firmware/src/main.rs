@@ -14,10 +14,13 @@ use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
 use embassy_time::Duration;
 use embedded_alloc::LlffHeap as Heap;
 
-use blink::{self, Led};
-use firmware::utils;
-use gps::{self, Gps};
-use imu::{self, Imu};
+mod gps;
+mod imu;
+mod utils;
+
+use utils::blink::{self, Led};
+use gps::Gps;
+use imu::Imu;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
