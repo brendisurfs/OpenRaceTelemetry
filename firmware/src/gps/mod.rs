@@ -8,7 +8,7 @@ use embassy_stm32::usart::{self, Uart};
 
 /// `NmeaMessage` and its parser are shared with the desktop app, which decodes
 /// the same sentences off recorded logs.
-pub use ort_types::gps::{NMEA_MAX_LEN, NmeaMessage};
+pub use ort_types::gps::{MAX_NMEA_LEN, NmeaMessage};
 
 /// Default baud rate for a stock NMEA module.
 pub const GPS_BAUD: u32 = 9600;
@@ -32,7 +32,7 @@ impl<'d> Gps<'d> {
     /// [`NMEA_MAX_LEN`] rather than overflowing `buf`.
     pub async fn read_sentence<'b>(
         &mut self,
-        buf: &'b mut [u8; NMEA_MAX_LEN],
+        buf: &'b mut [u8; MAX_NMEA_LEN],
     ) -> Result<&'b [u8], usart::Error> {
         defmt::todo!()
     }

@@ -4,59 +4,77 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
-	/**  A placeholder event example to eventually read data off of a component. */
-	readData: (onEvent: Channel<ReadEvent>) => __TAURI_INVOKE<void>("read_data", { onEvent }),
-	/**
-	 *  Decodes one raw MPU6050 burst read for display.
-	 * 
-	 *  NOTE: Placeholder wiring. The real source is the ingest path.
-	 *  It exists now so `ImuDataDto` is reachable from the exporter,
-	 *  a type only reaches `bindings.ts` if a command mentions it.
-	 */
-	imuSample: (buf: number[]) => __TAURI_INVOKE<{
-	accelX: number,
-	accelY: number,
-	accelZ: number,
-	tempRaw: number,
-	gyroX: number,
-	gyroY: number,
-	gyroZ: number,
-} | null>("imu_sample", { buf }),
-	/**  Parses an NMEA sentence and hands the frontend the string-shaped DTO. */
-	parseNmea: (sentence: string) => __TAURI_INVOKE<{
-	talker: string,
-	messageType: string,
-} | null>("__parse_nmea", { sentence }),
+  greet: (name: string) => __TAURI_INVOKE<string>("greet", { name }),
+  /**  A placeholder event example to eventually read data off of a component. */
+  readData: (onEvent: Channel<ReadEvent>) => __TAURI_INVOKE<void>("read_data", { onEvent }),
 };
 
 /* Types */
+export type GPGGASentenceDto = {
+  talker: string;
+  /**  hhmmss.sss */
+  utcTime: number;
+  latitude: number | null;
+  /**  "N"=1, "S"=-1 */
+  latSign: LatSign;
+  longitude: number | null;
+  /**  E=1, W=-1 */
+  longSign: LongSign;
+  positionFixIndicator: PositionFixIndicator;
+  /**  apprently range is 0 - 12 */
+  satellitesUsed: number;
+  /**  Horizontal Dilution of Precision */
+  hdop: number | null;
+  mslAltitudeMeters: number | null;
+  /**  Meters */
+  units: number;
+};
+
 /**
  *  One IMU sample, in raw register units.
- * 
+ *
  *  The fields need no conversion (they are already `i16`).
  *  DTO keeps `specta` out of `ort_types`, and it gives the
  *  frontend camelCase names to match `NmeaMessageDto`.
  */
 export type ImuDataDto = {
-	accelX: number,
-	accelY: number,
-	accelZ: number,
-	tempRaw: number,
-	gyroX: number,
-	gyroY: number,
-	gyroZ: number,
+  accelX: number;
+  accelY: number;
+  accelZ: number;
+  tempRaw: number;
+  gyroX: number;
+  gyroY: number;
+  gyroZ: number;
 };
+
+export type LatSign = "north" | "south";
+
+export type LongSign = "east" | "west";
 
 /**  An NMEA prefix as the frontend sees it — `{ talker: "GP", messageType: "GGA" }`. */
 export type NmeaMessageDto = {
-	talker: string,
-	messageType: string,
+  talker: string;
+  messageType: string;
 };
 
-export type ReadEvent = { event: "usbFound"; data: {
-	path: string,
-} } | { event: "started" } | { event: "progress"; data: {
-	progress: number,
-} } | { event: "finished" };
+export type PositionFixIndicator =
+  | "notAvailableOrInvalid"
+  | "gpsSPSModeFixValid"
+  | "differentialGpsFixValid"
+  | "deadReckoningMode";
 
+export type ReadEvent =
+  | {
+      event: "usbFound";
+      data: {
+        path: string;
+      };
+    }
+  | { event: "started" }
+  | {
+      event: "progress";
+      data: {
+        progress: number;
+      };
+    }
+  | { event: "finished" };

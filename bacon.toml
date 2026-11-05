@@ -64,14 +64,7 @@ command = ["cargo", "test"]
 need_stdout = true
 
 [jobs.nextest]
-command = [
-  "cargo",
-  "nextest",
-  "run",
-  "--hide-progress-bar",
-  "--failure-output",
-  "final",
-]
+command = ["cargo", "nextest", "run", "--hide-progress-bar", "--failure-output", "final"]
 need_stdout = true
 analyzer = "nextest"
 
@@ -84,7 +77,7 @@ need_stdout = false
 [jobs.doc-open]
 command = ["cargo", "doc", "--no-deps", "--open"]
 need_stdout = false
-on_success = "back"                               # so that we don't open the browser at each change
+on_success = "back" # so that we don't open the browser at each change
 
 # You can run your application and have the result displayed in bacon,
 # if it makes sense for this crate.

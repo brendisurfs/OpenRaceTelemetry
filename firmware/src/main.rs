@@ -1,7 +1,8 @@
-#![no_std]
 #![no_main]
+#![cfg_attr(not(test), no_std)]
 
 use defmt_rtt as _;
+use panic_probe as _;
 
 use defmt::*;
 use embassy_executor::Spawner;
@@ -11,15 +12,14 @@ use embassy_stm32::time::Hertz;
 use embassy_stm32::usart::{self, Uart};
 use embassy_stm32::{Config, bind_interrupts, i2c, peripherals};
 use embassy_time::Duration;
-use panic_probe as _;
 
 mod gps;
 mod imu;
 mod utils;
 
-use utils::blink::{self, Led};
 use gps::Gps;
 use imu::Imu;
+use utils::blink::{self, Led};
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(400);
 const I2C_FREQUENCY: Hertz = Hertz(400_000);
@@ -36,6 +36,9 @@ bind_interrupts!(struct Irqs {
     DMA2_STREAM7 => DmaInterruptHandler<peripherals::DMA2_CH7>; // USART1_TX
     DMA2_STREAM2 => DmaInterruptHandler<peripherals::DMA2_CH2>; // USART1_RX
 });
+
+/// pre-defined heap size to allocate.
+const HEAP_SIZE: usize = 512;
 
 #[embassy_executor::main]
 async fn main(spawner: embassy_executor::Spawner) -> ! {

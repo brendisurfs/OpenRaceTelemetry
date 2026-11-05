@@ -1,16 +1,9 @@
 mod dto;
 
-use dto::{ImuDataDto, NmeaMessageDto};
 use serde::Serialize;
 use specta::Type;
-use tauri::{ipc::Channel, AppHandle, Emitter};
+use tauri::{ipc::Channel, AppHandle};
 use tauri_specta::{collect_commands, Builder};
-
-#[tauri::command]
-#[specta::specta]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Type)]
 #[serde(
@@ -28,7 +21,7 @@ pub enum ReadEvent<'a> {
 /// A placeholder event example to eventually read data off of a component.
 #[tauri::command]
 #[specta::specta]
-fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
+fn read_data(_app: AppHandle, on_event: Channel<ReadEvent>) {
     on_event
         .send(ReadEvent::Started)
         .expect("read event to send");
@@ -46,7 +39,7 @@ fn read_data(app: AppHandle, on_event: Channel<ReadEvent>) {
 
 /// Commands and types exported to TypeScript.
 fn specta_builder() -> Builder<tauri::Wry> {
-    Builder::<tauri::Wry>::new().commands(collect_commands![greet, read_data])
+    Builder::<tauri::Wry>::new().commands(collect_commands![read_data])
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -62,7 +55,10 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    use crate::dto::GPGGASentenceDto;
+
     use super::*;
+    use dto::{ImuDataDto, NmeaMessageDto};
     use specta_typescript::Typescript;
 
     /// Regenerates `desktop/src/bindings.ts`.
@@ -76,6 +72,7 @@ mod tests {
             .typ::<ReadEvent>()
             .typ::<ImuDataDto>()
             .typ::<NmeaMessageDto>()
+            .typ::<GPGGASentenceDto>()
             .export(Typescript::default(), "../src/bindings.ts")
             .expect("failed to export typescript bindings");
     }

@@ -17,5 +17,5 @@
 pub mod gps;
 pub mod imu;
 
-pub use gps::{NMEA_MAX_LEN, NmeaMessage};
+pub use gps::{MAX_NMEA_LEN, NmeaMessage};
 pub use imu::{ImuData, READ_BUF_SIZE};
