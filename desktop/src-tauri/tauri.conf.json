@@ -14,7 +14,9 @@
       {
         "title": "Open Race Telemetry",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "theme": "Dark",
+        "backgroundColor": "#0B0A0A"
       }
     ],
     "security": {
