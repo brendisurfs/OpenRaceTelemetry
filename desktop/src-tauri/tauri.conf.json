@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "desktop",
+        "title": "Open Race Telemetry",
         "width": 800,
         "height": 600
       }
